@@ -9,30 +9,33 @@ services:
       - "3000:3000"
     # 環境変数を指定
     environment:
-      DATABASE_URL: postgres://user:password@db:5432/shift_db
-    # dbサービスが起動するまでappサービスを待機
+      DATABASE_HOST: mysql
+      DATABASE_USER: user
+      DATABASE_PASSWORD: password
+      DATABASE_NAME: shift_db
+    # mysqlサービスが起動するまでappサービスを待機
     depends_on:
-      - db
+      - mysql
     # ローカルのソースコードとコンテナを同期（開発用）
     volumes:
       - .:/app
     # 開発時にnodemonでサーバーを再起動
-    command: npm run dev
+    # command: npm run dev
 
-  db:
-    # PostgreSQLの公式イメージを使用
-    image: postgres:14-alpine
+  mysql:
+    # MySQL 8.0の公式イメージを使用
+    image: mysql:8.0
     # コンテナの再起動ポリシー
     restart: always
     # データベースの環境変数を設定
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: shift_db
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: shift_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
     # データを永続化するためのボリューム
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - mysqldata:/var/lib/mysql
 
-# データを永続化するためのボリュームを定義
 volumes:
-  pgdata:
+  mysqldata:
