@@ -14,8 +14,9 @@ services:
       - mysql
     volumes:
       - .:/app
-    # command: npm run dev # <-- この行を削除またはコメントアウト
-  
+      - /app/node_modules
+    command: npm run dev
+
   mysql:
     image: mysql:8.0
     restart: always
