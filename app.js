@@ -3,8 +3,8 @@ const session = require('express-session');
 const path = require('path');
 const mysql = require('mysql2/promise');
 
-const authRouter = require('./routes/auth');
-const shiftsRouter = require('./routes/shifts');
+const authRouter = require('./manage/routes/auth');
+const shiftsRouter = require('./manage/routes/shifts');
 
 const app = express();
 const PORT = 3000;
