@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>全体シフト</title>
+</head>
+<body>
+    <h1>全体シフト確認</h1>
+    <ul>
+        <% shifts.forEach(shift => { %>
+            <li><%= shift.date %>: <%= shift.user %> - <%= shift.time %></li>
+        <% }); %>
+    </ul>
+    <a href="/shifts/home">ホームに戻る</a>
+</body>
+</html>

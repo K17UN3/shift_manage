@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  app:
+    # Dockerfileを使ってイメージをビルド
+    build: .
+    # ホストのポート3000をコンテナのポート3000に接続
+    ports:
+      - "3000:3000"
+    # 環境変数を指定
+    environment:
+      DATABASE_URL: postgres://user:password@db:5432/shift_db
+    # dbサービスが起動するまでappサービスを待機
+    depends_on:
+      - db
+    # ローカルのソースコードとコンテナを同期（開発用）
+    volumes:
+      - .:/app
+    # 開発時にnodemonでサーバーを再起動
+    command: npm run dev
+
+  db:
+    # PostgreSQLの公式イメージを使用
+    image: postgres:14-alpine
+    # コンテナの再起動ポリシー
+    restart: always
+    # データベースの環境変数を設定
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: shift_db
+    # データを永続化するためのボリューム
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+# データを永続化するためのボリュームを定義
+volumes:
+  pgdata:
