@@ -31,7 +31,7 @@ app.use(session({
 
 // EJSをテンプレートエンジンとして設定
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
+app.set('views', path.join(__dirname, 'manage', 'views'));
 
 // DB保存テスト用のルーティング
 app.get('/test', async (req, res) => {
