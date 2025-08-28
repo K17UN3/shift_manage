@@ -2,38 +2,28 @@ version: '3.8'
 
 services:
   app:
-    # Dockerfileを使ってイメージをビルド
     build: .
-    # ホストのポート3000をコンテナのポート3000に接続
     ports:
       - "3000:3000"
-    # 環境変数を指定
     environment:
       DATABASE_HOST: mysql
       DATABASE_USER: user
       DATABASE_PASSWORD: password
       DATABASE_NAME: shift_db
-    # mysqlサービスが起動するまでappサービスを待機
     depends_on:
       - mysql
-    # ローカルのソースコードとコンテナを同期（開発用）
     volumes:
       - .:/app
-    # 開発時にnodemonでサーバーを再起動
-    # command: npm run dev
-
+    # command: npm run dev # <-- この行を削除またはコメントアウト
+  
   mysql:
-    # MySQL 8.0の公式イメージを使用
     image: mysql:8.0
-    # コンテナの再起動ポリシー
     restart: always
-    # データベースの環境変数を設定
     environment:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: shift_db
       MYSQL_USER: user
       MYSQL_PASSWORD: password
-    # データを永続化するためのボリューム
     volumes:
       - mysqldata:/var/lib/mysql
 

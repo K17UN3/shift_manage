@@ -7,7 +7,7 @@ WORKDIR /app
 # package.jsonとpackage-lock.jsonをコピー
 COPY package*.json ./
 
-# 依存関係をインストール
+# 依存関係をインストール（devDependenciesも含む）
 RUN npm install
 
 # アプリケーションのソースコードをコンテナにコピー

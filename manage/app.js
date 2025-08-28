@@ -43,10 +43,9 @@ app.post('/save', async (req, res) => {
     try {
         await pool.query('CREATE TABLE IF NOT EXISTS test_users (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255))');
         await pool.query('INSERT INTO test_users (name) VALUES (?)', [name]);
-        // 登録完了メッセージをセットしてページを再表示
-        res.render('test', { message: '登録できました' });
+        res.redirect('/test');
     } catch (err) {
-        res.status(500).send(`データベースエラー: ${err.message}`);
+        console.error(err);
     }
 });
 
