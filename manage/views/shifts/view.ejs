@@ -1,48 +1,55 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>全体シフト確認</title>
+    <title>月間シフトカレンダー</title>
+    <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
-    <h1>全体シフト確認 (<%= currentMonth.format('YYYY年MM月') %>)</h1>
+    <h1><%= currentMonth.format('YYYY年MM月') %> シフトカレンダー</h1>
     <p><a href="/shifts/home">ホームに戻る</a></p>
 
-    <h2>社員別合計勤務時間 (基準: 160時間)</h2>
-    <div class="summary-container">
-    <% Object.entries(totalHoursMap).forEach(([username, totalHours]) => { %>
-        <%
-            const isHigh = parseFloat(totalHours) >= 160;
-            // EJS内で幅を計算
-            const widthPercent = Math.min(100, (totalHours / 160) * 100);
+    <h2>月間シフトカレンダー</h2>
+
+    <div class="calendar-grid-table">
+        <div class="day-header sunday">日</div>
+        <div class="day-header">月</div>
+        <div class="day-header">火</div>
+        <div class="day-header">水</div>
+        <div class="day-header">木</div>
+        <div class="day-header">金</div>
+        <div class="day-header saturday">土</div>
+
+        <% 
+            let date = calendarStartDay.clone();
+            while (date.isSameOrBefore(calendarEndDay, 'day')) {
+                const dateString = date.format('YYYY-MM-DD');
+                const isCurrentMonth = date.isSame(currentMonth, 'month');
+                const isToday = date.isSame(today, 'day');
+                const dayOfWeek = date.day(); // 0=日, 6=土
         %>
-        <p>
-            <span <% if (isHigh) { %>style="color: red; font-weight: bold;"<% } %>><%= username %>: <%= totalHours %>時間</span>
-            
-            <div>
-                <%= username %>
-            </div>
-        </p>
-    <% }); %>
+            <a href="/shifts/day/<%= dateString %>" 
+               class="view-day-cell clickable 
+                        <%= isCurrentMonth ? '' : 'outside-month-view' %>
+                        <%= isToday ? 'today-view' : '' %>
+                        <%= (dayOfWeek === 0) ? 'sunday-view' : (dayOfWeek === 6 ? 'saturday-view' : '') %>">
+
+                <span class="date-number-button">
+                    <%= date.date() %>
+                </span>
+
+                <div class="shift-summary">
+                    <% 
+                        // シフトデータが渡されていれば表示するロジック
+                        // if (shiftsByDay[dateString] && shiftsByDay[dateString].length > 0) { ... } else { ... }
+                    %>
+                    <span class="summary-text">シフト状況をここに表示...</span>
+                </div>
+            </a>
+        <%
+                date.add(1, 'day'); // 次の日へ
+            }
+        %>
     </div>
-
-    <hr>
-
-    <h2>日付別シフト詳細</h2>
-    <% for (let i = 0; i < currentMonth.daysInMonth(); i++) { %>
-        <% const date = currentMonth.clone().add(i, 'days').format('YYYY-MM-DD'); %>
-        <h3><%= currentMonth.clone().add(i, 'days').format('MM月DD日 (ddd)') %></h3>
-        <div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;">
-        <% if (shiftsByDay[date] && shiftsByDay[date].length > 0) { %>
-            <ul>
-            <% shiftsByDay[date].forEach(shift => { %>
-                <li><%= shift.username %>: <%= shift.start_time %> - <%= shift.end_time %> (<%= shift.duration.toFixed(1) %>h)</li>
-            <% }); %>
-            </ul>
-        <% } else { %>
-            <p>シフト提出なし</p>
-        <% } %>
-        </div>
-    <% } %>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 </body>

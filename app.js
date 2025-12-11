@@ -23,7 +23,10 @@ const pool = mysql.createPool({
 
 // ミドルウェアの設定
 app.use(express.urlencoded({ extended: true }));
+
+// 静的ファイル配信をカスタムルーターより前に配置し、集約
 app.use(express.static(path.join(__dirname, 'public')));
+
 app.use(session({
     secret: 'your_super_secret_key',
     resave: false,
@@ -51,11 +54,8 @@ app.post('/save', async (req, res) => {
 });
 
 // ルーティングの設定
-// ******** ここが修正されました ********
-// authRouter と shiftsRouter に pool を渡す
 app.use('/', authRouter(pool));
 app.use('/shifts', shiftsRouter(pool));
-// **********************************
 
 // サーバー起動
 app.listen(PORT, () => {

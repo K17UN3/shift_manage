@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title><%= targetDate.format('YYYY年MM月DD日') %> シフト管理</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <h1><%= targetDate.format('YYYY年MM月DD日 (ddd)') %> シフト管理</h1>
+    <p><a href="/shifts/view">カレンダーに戻る</a></p>
+
+    <div class="daily-shift-grid">
+        <div class="time-column-header">時間</div>
+        
+        <% allUsers.forEach(user => { %>
+            <div class="user-column-header"><%= user %></div>
+        <% }); %>
+
+        <% 
+            // 8:00から23:00まで、30分刻みの時間帯を作成
+            for (let h = 8; h <= 23; h++) {
+                for (let m = 0; m < 60; m += 30) {
+                    const timeString = moment({ hour: h, minute: m }).format('HH:mm');
+        %>
+            <div class="time-cell"><%= timeString %></div>
+            
+            <% allUsers.forEach(user => { %>
+                <div class="shift-slot user-<%= user %>">
+                    シフト入力
+                </div>
+            <% }); %>
+        <%
+                }
+            }
+        %>
+    </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+</body>
+</html>

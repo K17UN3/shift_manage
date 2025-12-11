@@ -1,0 +1,100 @@
+/* ====================================
+   月間カレンダー表示用スタイル (view.ejs)
+   ==================================== */
+
+.calendar-grid-table {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr); 
+    max-width: 900px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    margin: 20px auto;
+}
+
+/* リンクをセルとして扱うためのリセット */
+.view-day-cell {
+    display: block; /* <a>タグをブロック要素にする */
+    text-decoration: none; /* リンクの下線を消す */
+    color: inherit;
+    min-height: 100px; 
+    padding: 8px;
+    border: 1px solid #eee;
+    background-color: white;
+    position: relative;
+    transition: background-color 0.1s;
+}
+
+.view-day-cell:hover {
+    background-color: #f0f8ff; /* ホバーで色を変える */
+    cursor: pointer;
+    border-color: #aaa;
+}
+
+.day-header {
+    font-weight: bold;
+    background-color: #e9ecef;
+    padding: 8px 5px;
+    text-align: center;
+    border: 1px solid #ccc;
+}
+.day-header.sunday { color: red; }
+.day-header.saturday { color: blue; }
+
+.date-number-button {
+    font-weight: bold;
+    text-align: right;
+    display: block;
+    float: right;
+    padding: 3px 6px;
+    border-radius: 4px;
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+/* 曜日・状態の色 */
+.sunday-view { color: red; background-color: #fffafa; }
+.saturday-view { color: blue; background-color: #f0f8ff; }
+.outside-month-view { background-color: #f8f8f8; color: #bbb; }
+.today-view { border: 2px solid #ff9800 !important; }
+
+/* ====================================
+   個別日シフト管理グリッドスタイル (day_shifts.ejs)
+   ==================================== */
+
+.daily-shift-grid {
+    display: grid;
+    /* 1列目: 時間軸 (固定幅)、2列目以降: ユーザー列 (均等幅) */
+    grid-template-columns: 80px repeat(auto-fit, minmax(100px, 1fr)); 
+    max-width: 1000px;
+    margin: 20px auto;
+    border: 1px solid #ccc;
+}
+
+.time-column-header, .user-column-header, .time-cell, .shift-slot {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+    border-right: 1px solid #eee;
+    text-align: center;
+}
+
+.time-column-header, .user-column-header {
+    background-color: #e9ecef;
+    font-weight: bold;
+    border-bottom: 1px solid #ccc;
+}
+
+.time-cell {
+    background-color: #f8f8f8;
+    font-weight: 500;
+}
+
+.shift-slot {
+    min-height: 20px;
+    background-color: white;
+    cursor: pointer;
+    transition: background-color 0.1s;
+}
+
+.shift-slot:hover {
+    background-color: #e0f7fa; /* シフト登録可能を示すホバー */
+}
