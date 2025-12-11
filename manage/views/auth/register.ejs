@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>アカウント登録</title>
+</head>
+<body>
+    <h1>アカウント登録</h1>
+
+    <% if (error) { %>
+        <p style="color: red;"><strong><%= error %></strong></p>
+    <% } %>
+
+    <form action="/register" method="POST">
+        <label for="username">個人識別番号：</label>
+        <input type="text" id="username" name="username" required><br><br>
+        
+        <button type="submit">アカウント登録</button>
+    </form>
+
+    <p><a href="/">ログイン画面に戻る</a></p>
+</body>
+</html>
