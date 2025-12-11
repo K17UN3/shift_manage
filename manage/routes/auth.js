@@ -54,15 +54,12 @@ module.exports = (pool) => {
 
     // ログイン処理 (POST /login)
     router.post('/login', async (req, res) => {
-        // パスワードは不要なため、usernameのみを取得
         const { username } = req.body;
 
         try {
-            await pool.query(
-                'CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(255) UNIQUE, password VARCHAR(255))'
-            );
+            // ... (usersテーブル作成のクエリは省略)
             
-            // 修正: 認証は username の一致のみで行う
+            // 認証は username の一致のみで行う
             const [rows] = await pool.query(
                 'SELECT * FROM users WHERE username = ?', 
                 [username]
@@ -72,18 +69,17 @@ module.exports = (pool) => {
                 // 認証成功
                 req.session.isLoggedIn = true;
                 req.session.username = username;
-                // ログイン成功時にユーザーIDもセッションに保存（シフト登録時に必要）
+                
+                // 【重要修正】ログイン成功時にユーザーIDもセッションに保存
                 req.session.userId = rows[0].id; 
                 
                 console.log(`User ${username} logged in successfully.`);
                 res.redirect('/shifts/home');
             } else {
-                // 認証失敗
-                res.render('auth/login', { error: '個人識別番号が正しくありません。' }); // ビュー名を 'auth/login' に修正
+                // ... (省略)
             }
         } catch (error) {
-            console.error('ログインエラー:', error);
-            res.status(500).send('サーバーエラーが発生しました');
+            // ... (省略)
         }
     });
 

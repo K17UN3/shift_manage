@@ -4,14 +4,12 @@
     <title>ホーム</title>
 </head>
 <body>
-    <h1>シフト管理ホーム</h1>
-    <p>ようこそ！</p>
-    
+    <h1>HOME</h1>
+
     <h2>提出情報</h2>
     <p><strong>シフト提出期限:</strong> <%= deadline %></p>
     
-    <h2>先月の実績</h2>
-    <p>前月（<%= moment(currentDate).subtract(1, 'month').format('YYYY年MM月') %>）の勤務時間: **<%= prevHours %>時間**</p>
+    <p><strong>先月の勤務時間:</strong> <%= moment(currentDate).subtract(1, 'month').format('YYYY年MM月') %>の勤務時間: **<%= prevHours %>時間**</p>
     
     <hr>
     
