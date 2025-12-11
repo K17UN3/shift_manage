@@ -6,8 +6,23 @@
 <body>
     <h1>シフト管理ホーム</h1>
     <p>ようこそ！</p>
-    <a href="/shifts/register">シフト登録</a>
-    <a href="/shifts/view">全体シフト確認</a>
+    
+    <h2>提出情報</h2>
+    <p><strong>シフト提出期限:</strong> <%= deadline %></p>
+    
+    <h2>先月の実績</h2>
+    <p>前月（<%= moment(currentDate).subtract(1, 'month').format('YYYY年MM月') %>）の勤務時間: **<%= prevHours %>時間**</p>
+    
+    <hr>
+    
+    <h2>機能</h2>
+    <p>
+        <a href="/shifts/register">シフト登録</a><br>
+        <a href="/shifts/view">全体シフト確認</a>
+    </p>
+    
     <a href="/logout">ログアウト</a>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 </body>
 </html>

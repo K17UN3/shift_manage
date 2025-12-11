@@ -3,6 +3,7 @@ const session = require('express-session');
 const path = require('path');
 const mysql = require('mysql2/promise');
 
+// routes/auth.js と routes/shifts.js は関数としてエクスポートされていることを想定
 const authRouter = require('./manage/routes/auth');
 const shiftsRouter = require('./manage/routes/shifts');
 
@@ -33,7 +34,7 @@ app.use(session({
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'manage', 'views'));
 
-// DB保存テスト用のルーティング
+// DB保存テスト用のルーティング (そのまま残します)
 app.get('/test', async (req, res) => {
     res.render('test', { message: null });
 });
@@ -50,8 +51,11 @@ app.post('/save', async (req, res) => {
 });
 
 // ルーティングの設定
-app.use('/', authRouter);
-app.use('/shifts', shiftsRouter);
+// ******** ここが修正されました ********
+// authRouter と shiftsRouter に pool を渡す
+app.use('/', authRouter(pool));
+app.use('/shifts', shiftsRouter(pool));
+// **********************************
 
 // サーバー起動
 app.listen(PORT, () => {

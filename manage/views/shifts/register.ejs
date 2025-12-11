@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>シフト登録</title>
+</head>
+<body>
+    <h1>シフト登録</h1>
+    <p><a href="/shifts/home">ホームに戻る</a></p>
+
+    <h2>今月のシフト状況</h2>
+    <p>現在提出済みのシフト時間: **<%= currentHours %>時間**</p>
+    <% if (typeof error !== 'undefined' && error) { %>
+        <p style="color: red;"><strong><%= error %></strong></p>
+    <% } %>
+
+    <hr>
+
+    <h2>シフト入力</h2>
+    <form action="/shifts/register" method="POST">
+        <label for="date">日付:</label>
+        <input type="date" id="date" name="date" required value="<%= moment().format('YYYY-MM-DD') %>"><br><br>
+        
+        <label for="start">開始時間:</label>
+        <input type="time" id="start" name="start" required value="09:00"><br><br>
+
+        <label for="end">終了時間:</label>
+        <input type="time" id="end" name="end" required value="17:00"><br><br>
+
+        <button type="submit">この日のシフトを登録</button>
+    </form>
+    
+    <hr>
+
+    <h2>登録済みシフト</h2>
+    <% if (registeredShifts.length > 0) { %>
+        <ul>
+        <% registeredShifts.forEach(shift => { %>
+            <li><%= shift.shift_date %>: <%= shift.start_time %> - <%= shift.end_time %></li>
+        <% }); %>
+        </ul>
+    <% } else { %>
+        <p>今月の登録済みシフトはありません。</p>
+    <% } %>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+</body>
+</html>
