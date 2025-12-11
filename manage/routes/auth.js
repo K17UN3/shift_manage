@@ -4,7 +4,8 @@ module.exports = (pool) => {
 
     // ログイン画面の表示
     router.get(['/', '/login'], (req, res) => {
-        res.render('login', { error: null }); 
+        // 修正: 'login' ではなく 'auth/login' を指定する
+        res.render('auth/login', { error: null }); 
     });
 
     // 新規ユーザー登録画面の表示
