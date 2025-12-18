@@ -13,13 +13,15 @@
         .chart { border-top: 1px solid #eee; }
         .row { display: flex; border-bottom: 1px solid #eee; height: 45px; align-items: center; }
         .name-col { width: 120px; font-size: 0.85rem; font-weight: bold; }
-        /* 属性を文字の色だけで表現（シンプル化） */
+        
+        /* 役職ごとの色 */
         .user_role-パート { color: #20c997; }
         .user_role-アルバイト { color: #f08c00; }
         .user_role-社員 { color: #339af0; }
 
         .timeline { flex-grow: 1; position: relative; height: 100%; background: linear-gradient(to right, #f9f9f9 1px, transparent 1px); background-size: calc(100% / 13) 100%; }
         .bar { position: absolute; height: 20px; top: 12px; background: #4dabf7; border-radius: 2px; font-size: 0.7rem; color: white; display: flex; align-items: center; padding-left: 5px; }
+        
         .break { position: absolute; height: 100%; top: 0; background: rgba(255,255,255,0.4); border-left: 1px dashed #fff; border-right: 1px dashed #fff; }
         .hide-breaks .break { display: none; }
     </style>
@@ -30,34 +32,38 @@
             <a href="/shifts/view" class="nav-link">← 戻る</a>
             <h1><%= targetDate.format('M/D (ddd)') %></h1>
         </div>
-        <div id="breakToggle" class="toggle-btn">休憩を表示中 (クリックで切替)</div>
+        <div id="breakToggle" class="toggle-btn">休憩を非表示中 (クリックで表示)</div>
     </div>
 
-    <div class="chart" id="chart">
+    <div class="chart hide-breaks" id="chart">
         <% allUsers.forEach(u => { %>
-            <div class="row">
-                <div class="name-col user_role-<%= u.user_role %>"><%= u.username %></div>
-                <div class="timeline">
-                    <% const s = dailyShiftsMap[u.username]; if (s) {
-                        const start = moment(s.start, 'HH:mm').hours() + moment(s.start, 'HH:mm').minutes()/60;
-                        const end = moment(s.end, 'HH:mm').hours() + moment(s.end, 'HH:mm').minutes()/60;
-                        const dur = end - start;
-                    %>
-                        <div class="bar" style="left:<%= ((start-7)/13)*100 %>%; width:<%= (dur/13)*100 %>%;">
-                            <%= s.start %>
-                            <% if (dur >= 6) { %><div class="break" style="left:<%= (4/dur)*100 %>%; width:<%= (1/dur)*100 %>%;"></div><% } %>
-                        </div>
-                    <% } %>
+            <% if (u.username !== 'admin') { %> <div class="row">
+                    <div class="name-col user_role-<%= u.user_role %>"><%= u.username %></div>
+                    <div class="timeline">
+                        <% const s = dailyShiftsMap[u.username]; if (s) {
+                            const start = moment(s.start, 'HH:mm').hours() + moment(s.start, 'HH:mm').minutes()/60;
+                            const end = moment(s.end, 'HH:mm').hours() + moment(s.end, 'HH:mm').minutes()/60;
+                            const dur = end - start;
+                        %>
+                            <div class="bar" style="left:<%= ((start-7)/13)*100 %>%; width:<%= (dur/13)*100 %>%;">
+                                <%= s.start %>
+                                <% if (dur >= 6) { %>
+                                    <div class="break" style="left:<%= (4/dur)*100 %>%; width:<%= (1/dur)*100 %>%;"></div>
+                                <% } %>
+                            </div>
+                        <% } %>
+                    </div>
                 </div>
-            </div>
-        <% }); %>
+            <% } %> <% }); %>
     </div>
 
     <script>
         const btn = document.getElementById('breakToggle');
+        const chart = document.getElementById('chart');
+
         btn.onclick = () => {
-            const isHidden = document.getElementById('chart').classList.toggle('hide-breaks');
-            btn.innerText = isHidden ? '休憩を非表示中' : '休憩を表示中 (クリックで切替)';
+            const isHidden = chart.classList.toggle('hide-breaks');
+            btn.innerText = isHidden ? '休憩を非表示中 (クリックで表示)' : '休憩を表示中 (クリックで非表示)';
         };
     </script>
 </body>

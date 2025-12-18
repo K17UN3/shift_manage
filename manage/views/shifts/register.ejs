@@ -37,9 +37,12 @@
                     <label>スタッフ</label>
                     <% if (isAdmin) { %>
                         <select name="employee_id" required>
-                            <option value="<%= userId %>">自分 (<%= username %>)</option>
+                            <% if (username !== 'admin') { %>
+                                <option value="<%= userId %>">自分 (<%= username %>)</option>
+                            <% } %>
+
                             <% allUsers.forEach(user => { %>
-                                <% if (user.id != userId) { %>
+                                <% if (user.id != userId && user.username !== 'admin') { %>
                                     <option value="<%= user.id %>"><%= user.username %></option>
                                 <% } %>
                             <% }); %>
