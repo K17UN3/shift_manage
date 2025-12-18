@@ -5,23 +5,64 @@
     <title>シフト表</title>
     <style>
         body { font-family: sans-serif; background: #fff; margin: 0; padding: 20px; color: #333; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
         h1 { font-size: 1.2rem; margin: 0; }
         .nav-link { font-size: 0.8rem; color: #007bff; text-decoration: none; }
         .toggle-btn { font-size: 0.7rem; color: #999; cursor: pointer; user-select: none; }
 
-        .chart { border-top: 1px solid #eee; }
-        .row { display: flex; border-bottom: 1px solid #eee; height: 45px; align-items: center; }
-        .name-col { width: 120px; font-size: 0.85rem; font-weight: bold; }
-        
-        /* 役職ごとの色 */
-        .user_role-パート { color: #20c997; }
-        .user_role-アルバイト { color: #f08c00; }
-        .user_role-社員 { color: #339af0; }
+        /* --- 時間軸（目盛り）のスタイル --- */
+        .time-axis { display: flex; align-items: flex-end; margin-bottom: 5px; }
+        .time-axis-spacer { width: 120px; }
+        .time-labels { 
+            flex-grow: 1; 
+            display: flex; 
+            justify-content: space-between; 
+            font-size: 0.65rem; 
+            color: #999; 
+            padding-bottom: 2px;
+            position: relative;
+        }
+        .time-label { position: relative; flex: 1; text-align: left; }
+        .time-label::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            bottom: -5px;
+            width: 1px;
+            height: 5px;
+            background: #bbb;
+        }
 
-        .timeline { flex-grow: 1; position: relative; height: 100%; background: linear-gradient(to right, #f9f9f9 1px, transparent 1px); background-size: calc(100% / 13) 100%; }
-        .bar { position: absolute; height: 20px; top: 12px; background: #4dabf7; border-radius: 2px; font-size: 0.7rem; color: white; display: flex; align-items: center; padding-left: 5px; }
-        
+        .chart { border-top: 1px solid #eee; }
+        .row { 
+            display: flex; 
+            border-bottom: 1px solid #ddd; 
+            height: 45px; 
+            align-items: center; 
+        }
+        /* 名前の列：色指定を削除し、太字のみに */
+        .name-col { width: 120px; font-size: 0.85rem; font-weight: bold; color: #333; }
+
+        /* タイムラインのグリッド線設定 */
+        .timeline { 
+            flex-grow: 1; 
+            position: relative; 
+            height: 100%; 
+            background-image: linear-gradient(to right, #e0e0e0 1px, transparent 1px);
+            background-size: calc(100% / 13) 100%; 
+        }
+
+        /* 3時間ごとの補助線 */
+        .timeline::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: linear-gradient(to right, #ccc 1px, transparent 1px);
+            background-size: calc(300% / 13) 100%;
+            pointer-events: none;
+        }
+
+        .bar { position: absolute; height: 20px; top: 12px; background: #4dabf7; border-radius: 2px; font-size: 0.7rem; color: white; display: flex; align-items: center; padding-left: 5px; z-index: 2; }
         .break { position: absolute; height: 100%; top: 0; background: rgba(255,255,255,0.4); border-left: 1px dashed #fff; border-right: 1px dashed #fff; }
         .hide-breaks .break { display: none; }
     </style>
@@ -35,10 +76,20 @@
         <div id="breakToggle" class="toggle-btn">休憩を非表示中 (クリックで表示)</div>
     </div>
 
+    <div class="time-axis">
+        <div class="time-axis-spacer"></div>
+        <div class="time-labels">
+            <% for(let h=7; h<=20; h++) { %>
+                <div class="time-label"><%= h < 10 ? '0'+h : h %>:00</div>
+            <% } %>
+        </div>
+    </div>
+
     <div class="chart hide-breaks" id="chart">
         <% allUsers.forEach(u => { %>
-            <% if (u.username !== 'admin') { %> <div class="row">
-                    <div class="name-col user_role-<%= u.user_role %>"><%= u.username %></div>
+            <% if (u.username !== 'admin') { %> 
+                <div class="row">
+                    <div class="name-col"><%= u.username %></div>
                     <div class="timeline">
                         <% const s = dailyShiftsMap[u.username]; if (s) {
                             const start = moment(s.start, 'HH:mm').hours() + moment(s.start, 'HH:mm').minutes()/60;
@@ -54,7 +105,8 @@
                         <% } %>
                     </div>
                 </div>
-            <% } %> <% }); %>
+            <% } %> 
+        <% }); %>
     </div>
 
     <script>
