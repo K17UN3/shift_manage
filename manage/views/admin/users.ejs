@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>従業員管理</title>
+    <style>
+        body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1 { font-size: 1.4rem; border-left: 5px solid #e03131; padding-left: 15px; }
+        .form-section { background: #fff5f5; padding: 20px; border-radius: 10px; border: 1px solid #ffc9c9; margin-bottom: 30px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end; }
+        label { display: block; font-weight: bold; font-size: 0.8rem; margin-bottom: 5px; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        .btn-add { background: #e03131; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .user-table { width: 100%; border-collapse: collapse; }
+        .user-table th, .user-table td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        .role-badge { padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; background: #eee; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h1>従業員アカウント管理</h1>
+        <a href="/shifts/home" style="text-decoration:none; color:#666;">← 戻る</a>
+    </div>
+
+    <div class="form-section">
+        <h2 style="font-size: 1rem; margin-top: 0;">新規従業員を登録</h2>
+        <form action="/admin/users/add" method="POST" class="form-grid">
+            <div>
+                <label>ユーザー名</label>
+                <input type="text" name="new_username" required>
+            </div>
+            <div>
+                <label>役職</label>
+                <select name="new_role">
+                    <option value="アルバイト">アルバイト</option>
+                    <option value="パート">パート</option>
+                    <option value="社員">社員</option>
+                </select>
+            </div>
+            <button type="submit" class="btn-add">登録</button>
+        </form>
+    </div>
+
+    <h2>登録済み従業員一覧</h2>
+    <table class="user-table">
+        <thead>
+            <tr>
+                <th>名前</th>
+                <th>役職</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% users.forEach(user => { %>
+                <% if (user.username !== 'admin') { %> <tr>
+                        <td><strong><%= user.username %></strong></td>
+                        <td><span class="role-badge"><%= user.user_role %></span></td>
+                        <td>
+                            <form action="/admin/users/delete/<%= user.id %>" method="POST" onsubmit="return confirm('このユーザーを削除すると、紐付いているシフトも全て削除されます。よろしいですか？');" style="margin:0;">
+                                <button type="submit" style="color: #e03131; background: none; border: none; cursor: pointer; text-decoration: underline; font-size: 0.8rem; padding:0;">
+                                    削除
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                <% } %>
+            <% }); %>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>

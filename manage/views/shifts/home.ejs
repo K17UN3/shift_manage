@@ -58,6 +58,12 @@
         <a href="/shifts/view" class="menu-item">
             月間全体表を見る
         </a>
+
+        <% if (isAdmin) { %>
+            <a href="/admin/users" class="menu-item" style="background: #fff5f5; border-color: #ffc9c9; color: #e03131;">
+                従業員アカウント管理
+            </a>
+        <% } %>
     </div>
 
     <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>

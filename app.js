@@ -3,9 +3,10 @@ const session = require('express-session');
 const path = require('path');
 const mysql = require('mysql2/promise');
 
-// routes/auth.js と routes/shifts.js は関数としてエクスポートされていることを想定
+// 各ルーターの読み込み
 const authRouter = require('./manage/routes/auth');
 const shiftsRouter = require('./manage/routes/shifts');
+const adminRouter = require('./manage/routes/admin'); // ★追加
 
 const app = express();
 const PORT = 3000;
@@ -21,12 +22,11 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
-// ミドルウェアの設定
+// --- ミドルウェアの設定 ---
 app.use(express.urlencoded({ extended: true }));
-
-// 静的ファイル配信をカスタムルーターより前に配置し、集約
 app.use(express.static(path.join(__dirname, 'public')));
 
+// セッション設定 (ルーティングより前に記述)
 app.use(session({
     secret: 'your_super_secret_key',
     resave: false,
@@ -37,7 +37,19 @@ app.use(session({
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'manage', 'views'));
 
-// DB保存テスト用のルーティング (そのまま残します)
+// --- ルーティングの設定 ---
+
+// 1. 認証 (ログイン・ログアウト)
+app.use('/', authRouter(pool));
+
+// 2. シフト管理 (登録・表示・削除)
+app.use('/shifts', shiftsRouter(pool));
+
+// 3. 管理者機能 (従業員管理) ★追加
+// これにより /admin/users などのURLが有効になります
+app.use('/admin', adminRouter(pool)); 
+
+// --- テスト用・その他 (必要に応じて) ---
 app.get('/test', async (req, res) => {
     res.render('test', { message: null });
 });
@@ -52,10 +64,6 @@ app.post('/save', async (req, res) => {
         console.error(err);
     }
 });
-
-// ルーティングの設定
-app.use('/', authRouter(pool));
-app.use('/shifts', shiftsRouter(pool));
 
 // サーバー起動
 app.listen(PORT, () => {
