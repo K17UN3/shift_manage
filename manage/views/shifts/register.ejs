@@ -3,159 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <title>シフト管理・登録</title>
-
     <style>
-        body {
-            font-family: "Helvetica Neue", Arial, sans-serif;
-            background: #f0f2f5;
-            margin: 0;
-            padding: 20px;
-            color: #333;
-        }
-
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-
-        .header-area {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-        }
-
-        h1 {
-            font-size: 1.5rem;
-            border-left: 5px solid #007bff;
-            padding-left: 15px;
-            margin: 0;
-        }
-
-        /* フォーム */
-        .form-section {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            border: 1px solid #eef0f2;
-            margin-bottom: 30px;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1.5fr;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            font-weight: bold;
-            font-size: 0.85rem;
-            margin-bottom: 5px;
-            color: #555;
-        }
-
-        input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            box-sizing: border-box;
-            font-size: 1rem;
-        }
-
-        .btn-submit {
-            width: 100%;
-            background: #007bff;
-            color: white;
-            border: none;
-            padding: 15px;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .btn-submit:hover {
-            background: #0056b3;
-        }
-
-        /* 一覧テーブル */
-        .shift-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-
-        .shift-table th,
-        .shift-table td {
-            padding: 15px;
-            text-align: left;
-            border-bottom: 1px solid #eee;
-        }
-
-        .shift-table th {
-            background: #f8f9fa;
-            font-size: 0.8rem;
-            color: #888;
-        }
-
-        .time-badge {
-            background: #e7f5ff;
-            color: #1971c2;
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            font-weight: bold;
-        }
-
-        .error-msg {
-            background: #fff5f5;
-            color: #e03131;
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid #ffc9c9;
-            margin-bottom: 20px;
-        }
+        body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .header-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        h1 { font-size: 1.4rem; border-left: 5px solid #007bff; padding-left: 15px; margin: 0; }
+        .form-section { background: #f8f9fa; padding: 20px; border-radius: 10px; border: 1px solid #eef0f2; margin-bottom: 30px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr 1.5fr; gap: 15px; margin-bottom: 15px; }
+        label { display: block; font-weight: bold; font-size: 0.85rem; margin-bottom: 5px; color: #555; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
+        .btn-submit { width: 100%; background: #007bff; color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .shift-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .shift-table th, .shift-table td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
+        .time-badge { background: #e7f5ff; color: #1971c2; padding: 4px 10px; border-radius: 6px; font-size: 0.85rem; font-weight: bold; }
+        .error-msg { background: #fff5f5; color: #e03131; padding: 15px; border-radius: 8px; border: 1px solid #ffc9c9; margin-bottom: 20px; }
     </style>
 </head>
-
 <body>
-
 <div class="container">
-
     <div class="header-area">
-        <h1>管理者用シフト登録</h1>
-        <a href="/shifts/home" style="text-decoration:none; color:#007bff; font-weight:bold;">
-            ← ホームに戻る
-        </a>
+        <h1><%= isAdmin ? '管理者用シフト管理' : 'シフト登録' %></h1>
+        <a href="/shifts/home" style="text-decoration:none; color:#007bff; font-weight:bold;">← ホームに戻る</a>
     </div>
 
     <% if (error) { %>
-        <div class="error-msg">
-            <strong>⚠️ エラー:</strong> <%= error %>
-        </div>
+        <div class="error-msg"><strong>⚠️ エラー:</strong> <%= error %></div>
     <% } %>
 
     <div class="form-section">
         <form action="/shifts/register" method="POST">
             <div class="form-grid">
-
                 <div>
-                    <label>従業員ID</label>
-                    <input type="number" name="employee_id" placeholder="未入力なら自分">
+                    <label>スタッフ</label>
+                    <% if (isAdmin) { %>
+                        <select name="employee_id" required>
+                            <option value="<%= userId %>">自分 (<%= username %>)</option>
+                            <% allUsers.forEach(user => { %>
+                                <% if (user.id != userId) { %>
+                                    <option value="<%= user.id %>"><%= user.username %></option>
+                                <% } %>
+                            <% }); %>
+                        </select>
+                    <% } else { %>
+                        <input type="text" value="<%= username %>" disabled>
+                        <input type="hidden" name="employee_id" value="<%= userId %>">
+                    <% } %>
                 </div>
-
                 <div>
                     <label>日付</label>
                     <input type="date" name="date" required value="<%= moment().format('YYYY-MM-DD') %>">
                 </div>
-
                 <div style="display: flex; gap: 10px;">
                     <div style="flex:1">
                         <label>開始</label>
@@ -166,42 +63,31 @@
                         <input type="time" name="end" required value="17:00">
                     </div>
                 </div>
-
             </div>
-
             <button type="submit" class="btn-submit">登録する</button>
         </form>
     </div>
 
     <h2>📅 今月のシフト一覧 (合計: <%= currentHours %>h)</h2>
-
     <table class="shift-table">
         <thead>
             <tr>
-                <th>従業員</th>
+                <th>スタッフ</th>
                 <th>日付</th>
                 <th>時間</th>
-                <% if (isAdmin) { %><th>操作</th><% } %> </tr>
+                <% if (isAdmin) { %><th>操作</th><% } %>
+            </tr>
         </thead>
         <tbody>
             <% registeredShifts.forEach(shift => { %>
                 <tr>
-                    <td>
-                        <small>ID:<%= shift.user_id %></small><br>
-                        <strong><%= shift.username %></strong>
-                    </td>
+                    <td><strong><%= shift.username %></strong><br><small>ID:<%= shift.user_id %></small></td>
                     <td><%= shift.shift_date %></td>
-                    <td>
-                        <span class="time-badge">
-                            <%= shift.start_time %> - <%= shift.end_time %>
-                        </span>
-                    </td>
+                    <td><span class="time-badge"><%= shift.start_time %> - <%= shift.end_time %></span></td>
                     <% if (isAdmin) { %>
                         <td>
-                            <form action="/shifts/delete/<%= shift.id %>" method="POST" style="margin:0;" onsubmit="return confirm('このシフトを削除してもよろしいですか？');">
-                                <button type="submit" style="background:none; border:none; color:#e03131; cursor:pointer; font-size:0.8rem; text-decoration:underline; padding:0;">
-                                    削除
-                                </button>
+                            <form action="/shifts/delete/<%= shift.id %>" method="POST" style="margin:0;" onsubmit="return confirm('削除しますか？');">
+                                <button type="submit" style="background:none; border:none; color:#e03131; cursor:pointer; text-decoration:underline; font-size:0.8rem;">削除</button>
                             </form>
                         </td>
                     <% } %>
@@ -209,8 +95,6 @@
             <% }); %>
         </tbody>
     </table>
-
 </div>
-
 </body>
 </html>

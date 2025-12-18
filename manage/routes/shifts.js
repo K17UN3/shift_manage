@@ -27,6 +27,14 @@ module.exports = (pool) => {
             const startOfMonth = moment().startOf('month').format('YYYY-MM-DD');
             const endOfMonth = moment().endOf('month').format('YYYY-MM-DD');
 
+            // adminならプルダウン用に全ユーザー取得
+            let allUsers = [];
+            if (isAdmin) {
+                const [users] = await pool.query('SELECT id, username FROM users ORDER BY username ASC');
+                allUsers = users;
+            }
+
+            // シフト一覧取得
             let query = `
                 SELECT s.id, u.username, u.user_role, u.id as user_id,
                        DATE_FORMAT(s.shift_date, '%Y-%m-%d') as shift_date,
@@ -36,12 +44,10 @@ module.exports = (pool) => {
                 WHERE s.shift_date BETWEEN ? AND ? `;
             
             const params = [startOfMonth, endOfMonth];
-
             if (!isAdmin) {
                 query += ` AND s.user_id = ? `;
                 params.push(req.session.userId);
             }
-
             query += ` ORDER BY s.shift_date DESC, FIELD(u.user_role, 'パート', 'アルバイト', '社員')`;
 
             const [shifts] = await pool.query(query, params);
@@ -57,6 +63,9 @@ module.exports = (pool) => {
                 currentHours: totalHours.toFixed(1), 
                 moment, 
                 isAdmin,
+                allUsers, // admin用スタッフリスト
+                userId: req.session.userId,     // 自分のID
+                username: req.session.username, // 自分の名前
                 error: req.query.error || null 
             });
         } catch (e) { 
@@ -69,6 +78,8 @@ module.exports = (pool) => {
     router.post('/register', requireLogin, async (req, res) => {
         const { date, start, end, employee_id } = req.body;
         const isAdmin = (req.session.username === 'admin');
+        
+        // adminなら選択されたID、一般なら自分のID
         const targetUserId = (isAdmin && employee_id) ? employee_id : req.session.userId;
 
         try {
@@ -82,21 +93,16 @@ module.exports = (pool) => {
         }
     });
 
-    // --- [POST] シフト削除（adminのみ） ---
+    // --- [POST] シフト削除（重要：必ずreturn routerより前に書く） ---
     router.post('/delete/:id', requireLogin, async (req, res) => {
-        // adminでなければ拒否
         if (req.session.username !== 'admin') {
             return res.status(403).send('権限がありません');
         }
-
-        const shiftId = req.params.id;
-
         try {
-            await pool.query('DELETE FROM shifts WHERE id = ?', [shiftId]);
-            res.redirect('/shifts/register'); 
+            await pool.query('DELETE FROM shifts WHERE id = ?', [req.params.id]);
+            res.redirect('/shifts/register');
         } catch (e) {
-            console.error(e);
-            res.redirect('/shifts/register?error=削除に失敗しました');
+            res.redirect('/shifts/register?error=削除失敗');
         }
     });
 
@@ -106,7 +112,6 @@ module.exports = (pool) => {
         const currentMonth = monthQuery ? moment(monthQuery, 'YYYY-MM').startOf('month') : moment().startOf('month');
         const start = currentMonth.clone().startOf('month').format('YYYY-MM-DD');
         const end = currentMonth.clone().add(1, 'month').startOf('month').format('YYYY-MM-DD');
-        
         try {
             const [allShifts] = await pool.query(
                 `SELECT u.username, u.user_role, DATE_FORMAT(s.shift_date, '%Y-%m-%d') as shift_date,
@@ -114,21 +119,12 @@ module.exports = (pool) => {
                  FROM shifts s JOIN users u ON s.user_id = u.id 
                  WHERE s.shift_date >= ? AND s.shift_date < ?
                  ORDER BY FIELD(u.user_role, 'パート', 'アルバイト', '社員')`, [start, end]);
-
             const shiftsByDay = {};
             allShifts.forEach(s => { 
                 if (!shiftsByDay[s.shift_date]) shiftsByDay[s.shift_date] = []; 
                 shiftsByDay[s.shift_date].push(s); 
             });
-
-            res.render('shifts/view', { 
-                currentMonth, 
-                shiftsByDay, 
-                moment, 
-                calendarStartDay: currentMonth.clone().startOf('month').startOf('week'), 
-                calendarEndDay: currentMonth.clone().endOf('month').endOf('week'), 
-                today: moment() 
-            });
+            res.render('shifts/view', { currentMonth, shiftsByDay, moment, calendarStartDay: currentMonth.clone().startOf('month').startOf('week'), calendarEndDay: currentMonth.clone().endOf('month').endOf('week'), today: moment() });
         } catch (e) { res.status(500).send('エラー'); }
     });
 
@@ -136,28 +132,11 @@ module.exports = (pool) => {
     router.get('/day/:dateString', requireLogin, async (req, res) => {
         const dateString = req.params.dateString;
         const isAdmin = (req.session.username === 'admin');
-
         try {
-            const [dailyShiftsResult] = await pool.query(
-                `SELECT u.username, TIME_FORMAT(s.start_time, '%H:%i') as start_time, TIME_FORMAT(s.end_time, '%H:%i') as end_time
-                 FROM shifts s JOIN users u ON s.user_id = u.id WHERE s.shift_date = ?`, [dateString]);
-            
-            const [allUsersResult] = await pool.query(
-                `SELECT id, username, user_role FROM users ORDER BY FIELD(user_role, 'パート', 'アルバイト', '社員'), id ASC`);
-
-            const dailyShiftsMap = dailyShiftsResult.reduce((map, s) => {
-                map[s.username] = { start: s.start_time, end: s.end_time };
-                return map;
-            }, {});
-
-            res.render('shifts/day_shifts', { 
-                targetDate: moment(dateString), 
-                allUsers: allUsersResult, 
-                dailyShiftsMap, 
-                moment,
-                isAdmin,
-                currentUsername: req.session.username
-            });
+            const [dailyShiftsResult] = await pool.query(`SELECT u.username, TIME_FORMAT(s.start_time, '%H:%i') as start_time, TIME_FORMAT(s.end_time, '%H:%i') as end_time FROM shifts s JOIN users u ON s.user_id = u.id WHERE s.shift_date = ?`, [dateString]);
+            const [allUsersResult] = await pool.query(`SELECT id, username, user_role FROM users ORDER BY FIELD(user_role, 'パート', 'アルバイト', '社員'), id ASC`);
+            const dailyShiftsMap = dailyShiftsResult.reduce((map, s) => { map[s.username] = { start: s.start_time, end: s.end_time }; return map; }, {});
+            res.render('shifts/day_shifts', { targetDate: moment(dateString), allUsers: allUsersResult, dailyShiftsMap, moment, isAdmin, currentUsername: req.session.username });
         } catch (e) { res.status(500).send('エラー'); }
     });
 
