@@ -2,150 +2,69 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>HOME - シフト管理システム</title>
+    <title>ホーム</title>
     <style>
-        /* 全体のスタイルを統一 */
-        body {
-            font-family: "Helvetica Neue", Arial, sans-serif;
-            background-color: #f0f2f5;
-            margin: 0;
-            padding: 20px;
-            color: #333;
-        }
-        .container {
-            max-width: 800px; /* ホームは少しスリムに */
-            margin: 40px auto;
+        body { font-family: sans-serif; background: #f8f9fa; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 400px; margin: 0 auto; text-align: center; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        h1 { font-size: 1.1rem; margin: 0; }
+        .btn-logout { font-size: 0.8rem; color: #999; text-decoration: none; }
+
+        /* メニューボタンのスタイル */
+        .menu-list { display: flex; flex-direction: column; gap: 15px; }
+        .menu-item {
             background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-
-        /* ヘッダーデザイン */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-        h1 {
-            font-size: 1.8rem;
-            color: #1a1a1a;
-            border-left: 5px solid #007bff;
-            padding-left: 15px;
-            margin: 0;
-        }
-
-        /* 提出情報・ステータスエリア */
-        .status-section {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 40px;
-        }
-        .info-card {
-            background: #f8f9fa;
             padding: 20px;
             border-radius: 10px;
-            border: 1px solid #eef0f2;
-        }
-        .info-card h2 {
-            font-size: 0.9rem;
-            color: #666;
-            margin-top: 0;
-            margin-bottom: 10px;
-        }
-        .info-value {
-            font-size: 1.2rem;
-            font-weight: bold;
+            border: 1px solid #ddd;
+            text-decoration: none;
             color: #333;
-        }
-        .highlight-blue { color: #007bff; }
-
-        /* 機能メニュー（カードボタン） */
-        .menu-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        .menu-item {
+            font-weight: bold;
+            font-size: 1rem;
+            transition: transform 0.1s, background 0.2s;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 30px 20px;
-            background-color: #fff;
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            text-decoration: none;
-            color: #333;
-            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
         .menu-item:hover {
-            border-color: #007bff;
-            background-color: #f0f7ff;
-            transform: translateY(-3px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+            background: #f1f3f5;
+            transform: translateY(-2px);
         }
-        .menu-title {
-            font-weight: bold;
-            font-size: 1.1rem;
+        .menu-item:active {
+            transform: translateY(0);
         }
-
-        /* ログアウトボタン */
-        .footer {
-            text-align: center;
-            border-top: 1px solid #eee;
-            padding-top: 20px;
-        }
-        .logout-link {
-            text-decoration: none;
-            color: #888;
-            font-size: 0.9rem;
-            font-weight: bold;
-            transition: color 0.2s;
-        }
-        .logout-link:hover {
-            color: #dc3545; /* ログアウトは赤 */
-        }
+        
+        /* 今日の日付表示 */
+        .today-info { font-size: 0.9rem; color: #666; margin-bottom: 20px; }
     </style>
 </head>
 <body>
-
 <div class="container">
     <div class="header">
-        <h1>HOME</h1>
+        <h1>こんにちは、<%= username %> さん</h1>
+        <a href="/auth/logout" class="btn-logout">ログアウト</a>
     </div>
 
-    <div class="status-section">
-        <div class="info-card">
-            <h2>シフト提出期限</h2>
-            <div class="info-value"><%= deadline %></div>
-        </div>
-        <div class="info-card">
-            <h2>先月の勤務実績</h2>
-            <div class="info-value">
-                <%= moment(currentDate).subtract(1, 'month').format('M月') %> : 
-                <span class="highlight-blue"><%= prevHours %> 時間</span>
-            </div>
-        </div>
+    <div class="today-info">
+        今日は <%= moment().format('YYYY年 M月 D日 (ddd)') %> です
     </div>
 
-    <div class="menu-grid">
+    <div class="menu-list">
         <a href="/shifts/register" class="menu-item">
-            <span class="menu-title">シフト登録</span>
+            シフトを提出・確認する
         </a>
+
         <a href="/shifts/view" class="menu-item">
-            <span class="menu-title">全体シフト確認</span>
+            月間全体表を見る
         </a>
     </div>
 
-    <div class="footer">
-        <a href="/logout" class="logout-link">ログアウト</a>
-    </div>
+    <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+        <div style="margin-top: 30px; font-size: 0.75rem; color: #aaa;">
+            管理者モードでログイン中
+        </div>
+    <% } %>
 </div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 </body>
 </html>

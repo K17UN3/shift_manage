@@ -1,6 +1,7 @@
 const express = require('express');
 const moment = require('moment');
 
+// ログインチェック用ミドルウェア
 const requireLogin = (req, res, next) => {
     if (!req.session.isLoggedIn) return res.redirect('/');
     next();
@@ -9,38 +10,82 @@ const requireLogin = (req, res, next) => {
 module.exports = (pool) => {
     const router = express.Router();
 
-    // --- [GET] シフト登録画面（全データ表示） ---
+    // --- [GET] シフト管理ホーム画面 ---
+    router.get('/home', requireLogin, (req, res) => {
+        // admin判定
+        const isAdmin = (req.session.username === 'admin');
+
+        res.render('shifts/home', {
+            username: req.session.username,
+            isAdmin: isAdmin, // 管理者かどうかを渡す
+            moment: moment    // カレンダー描画に必要
+        });
+    });
+
+    // --- [GET] シフト登録画面 ---
     router.get('/register', requireLogin, async (req, res) => {
         try {
+            const isAdmin = (req.session.username === 'admin');
             const startOfMonth = moment().startOf('month').format('YYYY-MM-DD');
             const endOfMonth = moment().endOf('month').format('YYYY-MM-DD');
-            const [shifts] = await pool.query(
-                `SELECT s.id, u.username, u.user_role, u.id as user_id,
-                        DATE_FORMAT(s.shift_date, '%Y-%m-%d') as shift_date,
-                        TIME_FORMAT(s.start_time, '%H:%i') as start_time,
-                        TIME_FORMAT(s.end_time, '%H:%i') as end_time
-                 FROM shifts s JOIN users u ON s.user_id = u.id
-                 WHERE s.shift_date BETWEEN ? AND ?
-                 ORDER BY s.shift_date DESC, FIELD(u.user_role, 'パート', 'アルバイト', '社員')`,
-                [startOfMonth, endOfMonth]
-            );
+
+            // adminなら全ユーザー、一般なら自分のみのデータを取得
+            let query = `
+                SELECT s.id, u.username, u.user_role, u.id as user_id,
+                       DATE_FORMAT(s.shift_date, '%Y-%m-%d') as shift_date,
+                       TIME_FORMAT(s.start_time, '%H:%i') as start_time,
+                       TIME_FORMAT(s.end_time, '%H:%i') as end_time
+                FROM shifts s JOIN users u ON s.user_id = u.id
+                WHERE s.shift_date BETWEEN ? AND ? `;
+            
+            const params = [startOfMonth, endOfMonth];
+
+            if (!isAdmin) {
+                query += ` AND s.user_id = ? `;
+                params.push(req.session.userId);
+            }
+
+            query += ` ORDER BY s.shift_date DESC, FIELD(u.user_role, 'パート', 'アルバイト', '社員')`;
+
+            const [shifts] = await pool.query(query, params);
+
+            // 合計時間の計算
             const totalHours = shifts.reduce((acc, s) => {
                 const start = moment(s.start_time, 'HH:mm');
                 const end = moment(s.end_time, 'HH:mm');
                 return acc + end.diff(start, 'hours', true);
             }, 0);
-            res.render('shifts/register', { registeredShifts: shifts, currentHours: totalHours.toFixed(1), moment, error: req.query.error || null });
-        } catch (e) { res.status(500).send('エラー'); }
+
+            res.render('shifts/register', { 
+                registeredShifts: shifts, 
+                currentHours: totalHours.toFixed(1), 
+                moment, 
+                isAdmin,
+                error: req.query.error || null 
+            });
+        } catch (e) { 
+            console.error(e);
+            res.status(500).send('エラー'); 
+        }
     });
 
     // --- [POST] シフト登録 ---
     router.post('/register', requireLogin, async (req, res) => {
         const { date, start, end, employee_id } = req.body;
-        const targetUserId = employee_id || req.session.userId;
+        const isAdmin = (req.session.username === 'admin');
+        
+        // adminなら指定のID、一般なら自分のIDを使用
+        const targetUserId = (isAdmin && employee_id) ? employee_id : req.session.userId;
+
         try {
-            await pool.query('INSERT INTO shifts (user_id, shift_date, start_time, end_time) VALUES (?, ?, ?, ?)', [targetUserId, date, start, end]);
+            await pool.query(
+                'INSERT INTO shifts (user_id, shift_date, start_time, end_time) VALUES (?, ?, ?, ?)', 
+                [targetUserId, date, start, end]
+            );
             res.redirect('/shifts/register');
-        } catch (e) { res.redirect('/shifts/register?error=登録失敗'); }
+        } catch (e) { 
+            res.redirect('/shifts/register?error=登録失敗'); 
+        }
     });
 
     // --- [GET] 月間カレンダー ---
@@ -49,34 +94,58 @@ module.exports = (pool) => {
         const currentMonth = monthQuery ? moment(monthQuery, 'YYYY-MM').startOf('month') : moment().startOf('month');
         const start = currentMonth.clone().startOf('month').format('YYYY-MM-DD');
         const end = currentMonth.clone().add(1, 'month').startOf('month').format('YYYY-MM-DD');
+        
         try {
             const [allShifts] = await pool.query(
-                `SELECT u.username, DATE_FORMAT(s.shift_date, '%Y-%m-%d') as shift_date,
+                `SELECT u.username, u.user_role, DATE_FORMAT(s.shift_date, '%Y-%m-%d') as shift_date,
                  TIME_FORMAT(s.start_time, '%H:%i') as start_time, TIME_FORMAT(s.end_time, '%H:%i') as end_time
-                 FROM shifts s JOIN users u ON s.user_id = u.id WHERE s.shift_date >= ? AND s.shift_date < ?`, [start, end]);
+                 FROM shifts s JOIN users u ON s.user_id = u.id 
+                 WHERE s.shift_date >= ? AND s.shift_date < ?
+                 ORDER BY FIELD(u.user_role, 'パート', 'アルバイト', '社員')`, [start, end]);
+
             const shiftsByDay = {};
-            allShifts.forEach(s => { if (!shiftsByDay[s.shift_date]) shiftsByDay[s.shift_date] = []; shiftsByDay[s.shift_date].push(s); });
-            res.render('shifts/view', { currentMonth, shiftsByDay, moment, calendarStartDay: currentMonth.clone().startOf('month').startOf('week'), calendarEndDay: currentMonth.clone().endOf('month').endOf('week'), today: moment() });
+            allShifts.forEach(s => { 
+                if (!shiftsByDay[s.shift_date]) shiftsByDay[s.shift_date] = []; 
+                shiftsByDay[s.shift_date].push(s); 
+            });
+
+            res.render('shifts/view', { 
+                currentMonth, 
+                shiftsByDay, 
+                moment, 
+                calendarStartDay: currentMonth.clone().startOf('month').startOf('week'), 
+                calendarEndDay: currentMonth.clone().endOf('month').endOf('week'), 
+                today: moment() 
+            });
         } catch (e) { res.status(500).send('エラー'); }
     });
 
-    // --- [GET] 1日詳細（並び替え機能付き） ---
+    // --- [GET] 1日詳細 ---
     router.get('/day/:dateString', requireLogin, async (req, res) => {
         const dateString = req.params.dateString;
+        const isAdmin = (req.session.username === 'admin');
+
         try {
             const [dailyShiftsResult] = await pool.query(
                 `SELECT u.username, TIME_FORMAT(s.start_time, '%H:%i') as start_time, TIME_FORMAT(s.end_time, '%H:%i') as end_time
                  FROM shifts s JOIN users u ON s.user_id = u.id WHERE s.shift_date = ?`, [dateString]);
             
-            // 重要：パート ＞ アルバイト ＞ 社員の順でユーザーを取得
             const [allUsersResult] = await pool.query(
-                `SELECT username, user_role FROM users ORDER BY FIELD(user_role, 'パート', 'アルバイト', '社員'), id ASC`);
+                `SELECT id, username, user_role FROM users ORDER BY FIELD(user_role, 'パート', 'アルバイト', '社員'), id ASC`);
 
             const dailyShiftsMap = dailyShiftsResult.reduce((map, s) => {
                 map[s.username] = { start: s.start_time, end: s.end_time };
                 return map;
             }, {});
-            res.render('shifts/day_shifts', { targetDate: moment(dateString), allUsers: allUsersResult, dailyShiftsMap, moment });
+
+            res.render('shifts/day_shifts', { 
+                targetDate: moment(dateString), 
+                allUsers: allUsersResult, 
+                dailyShiftsMap, 
+                moment,
+                isAdmin,
+                currentUsername: req.session.username
+            });
         } catch (e) { res.status(500).send('エラー'); }
     });
 
