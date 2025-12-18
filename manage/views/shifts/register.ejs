@@ -1,46 +1,222 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
-    <title>シフト登録</title>
+    <meta charset="UTF-8">
+    <title>シフト登録 - シフト管理システム</title>
+    <style>
+        /* 全体のトーンを統一 */
+        body {
+            font-family: "Helvetica Neue", Arial, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        /* ヘッダー */
+        .header-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        h1 {
+            font-size: 1.5rem;
+            color: #1a1a1a;
+            border-left: 5px solid #007bff;
+            padding-left: 15px;
+            margin: 0;
+        }
+        .nav-link {
+            text-decoration: none;
+            color: #007bff;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        /* ステータスカード（今月の時間） */
+        .info-card {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-radius: 10px;
+            border: 1px solid #eef0f2;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .info-label { font-size: 0.9rem; color: #666; font-weight: bold; }
+        .info-value { font-size: 1.2rem; font-weight: bold; color: #007bff; }
+
+        /* エラーメッセージ */
+        .error-msg {
+            background-color: #fff5f5;
+            color: #e03131;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 4px solid #e03131;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        /* 入力フォーム */
+        .form-section {
+            background: #fff;
+            padding: 0;
+            margin-bottom: 40px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: #495057;
+        }
+        input[type="date"],
+        input[type="time"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            font-size: 1rem;
+            box-sizing: border-box; /* 幅を100%に固定 */
+            font-family: inherit;
+        }
+        input:focus {
+            outline: none;
+            border-color: #4dabf7;
+            box-shadow: 0 0 0 3px rgba(77, 171, 247, 0.2);
+        }
+
+        button {
+            width: 100%;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 10px;
+        }
+        button:hover { background-color: #0056b3; }
+
+        /* 登録済みリスト */
+        h2 {
+            font-size: 1.1rem;
+            color: #495057;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .shift-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .shift-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: #fff;
+            border-bottom: 1px solid #eee;
+        }
+        .shift-item:last-child { border-bottom: none; }
+        .shift-date { font-weight: bold; font-size: 0.95rem; }
+        .shift-time { 
+            background: #e7f5ff; 
+            color: #1971c2; 
+            padding: 4px 10px; 
+            border-radius: 20px; 
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+        .no-data {
+            text-align: center;
+            color: #adb5bd;
+            padding: 20px;
+            font-size: 0.9rem;
+        }
+    </style>
 </head>
 <body>
-    <h1>シフト登録</h1>
-    <p><a href="/shifts/home">ホームに戻る</a></p>
 
-    <h2>今月のシフト状況</h2>
-    <p>現在提出済みのシフト時間: **<%= currentHours %>時間**</p>
+<div class="container">
+    <div class="header-area">
+        <h1>シフト登録</h1>
+        <a href="/shifts/home" class="nav-link">← ホームに戻る</a>
+    </div>
+
+    <div class="info-card">
+        <span class="info-label">📊 今月の提出済みシフト合計</span>
+        <span class="info-value"><%= currentHours %> 時間</span>
+    </div>
+
     <% if (typeof error !== 'undefined' && error) { %>
-        <p style="color: red;"><strong><%= error %></strong></p>
+        <div class="error-msg">
+            <strong>エラー:</strong> <%= error %>
+        </div>
     <% } %>
 
-    <hr>
+    <div class="form-section">
+        <h2>新規入力</h2>
+        <form action="/shifts/register" method="POST">
+            <div class="form-group">
+                <label for="date">日付</label>
+                <input type="date" id="date" name="date" required value="<%= moment().format('YYYY-MM-DD') %>">
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="form-group">
+                    <label for="start">開始時間</label>
+                    <input type="time" id="start" name="start" required value="09:00">
+                </div>
 
-    <h2>シフト入力</h2>
-    <form action="/shifts/register" method="POST">
-        <label for="date">日付:</label>
-        <input type="date" id="date" name="date" required value="<%= moment().format('YYYY-MM-DD') %>"><br><br>
-        
-        <label for="start">開始時間:</label>
-        <input type="time" id="start" name="start" required value="09:00"><br><br>
+                <div class="form-group">
+                    <label for="end">終了時間</label>
+                    <input type="time" id="end" name="end" required value="17:00">
+                </div>
+            </div>
 
-        <label for="end">終了時間:</label>
-        <input type="time" id="end" name="end" required value="17:00"><br><br>
+            <button type="submit">この日のシフトを登録する</button>
+        </form>
+    </div>
 
-        <button type="submit">この日のシフトを登録</button>
-    </form>
-    
-    <hr>
+    <hr style="border: 0; border-top: 1px solid #eee; margin: 40px 0;">
 
-    <h2>登録済みシフト</h2>
-    <% if (registeredShifts.length > 0) { %>
-        <ul>
-        <% registeredShifts.forEach(shift => { %>
-            <li><%= shift.shift_date %>: <%= shift.start_time %> - <%= shift.end_time %></li>
-        <% }); %>
-        </ul>
-    <% } else { %>
-        <p>今月の登録済みシフトはありません。</p>
-    <% } %>
+    <div class="list-section">
+        <h2>今月の登録済みシフト</h2>
+        <% if (registeredShifts.length > 0) { %>
+            <div style="border: 1px solid #eee; border-radius: 8px; overflow: hidden;">
+                <ul class="shift-list">
+                <% registeredShifts.forEach(shift => { %>
+                    <li class="shift-item">
+                        <span class="shift-date"><%= shift.shift_date %></span>
+                        <span class="shift-time"><%= shift.start_time %> - <%= shift.end_time %></span>
+                    </li>
+                <% }); %>
+                </ul>
+            </div>
+        <% } else { %>
+            <p class="no-data">今月の登録済みシフトはありません。</p>
+        <% } %>
+    </div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 </body>
