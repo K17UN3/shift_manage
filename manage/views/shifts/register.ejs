@@ -181,13 +181,13 @@
                 <th>従業員</th>
                 <th>日付</th>
                 <th>時間</th>
-            </tr>
+                <% if (isAdmin) { %><th>操作</th><% } %> </tr>
         </thead>
         <tbody>
             <% registeredShifts.forEach(shift => { %>
                 <tr>
                     <td>
-                        ID:<%= shift.user_id %>
+                        <small>ID:<%= shift.user_id %></small><br>
                         <strong><%= shift.username %></strong>
                     </td>
                     <td><%= shift.shift_date %></td>
@@ -196,6 +196,15 @@
                             <%= shift.start_time %> - <%= shift.end_time %>
                         </span>
                     </td>
+                    <% if (isAdmin) { %>
+                        <td>
+                            <form action="/shifts/delete/<%= shift.id %>" method="POST" style="margin:0;" onsubmit="return confirm('このシフトを削除してもよろしいですか？');">
+                                <button type="submit" style="background:none; border:none; color:#e03131; cursor:pointer; font-size:0.8rem; text-decoration:underline; padding:0;">
+                                    削除
+                                </button>
+                            </form>
+                        </td>
+                    <% } %>
                 </tr>
             <% }); %>
         </tbody>

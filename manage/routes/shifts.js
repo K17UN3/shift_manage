@@ -12,13 +12,11 @@ module.exports = (pool) => {
 
     // --- [GET] シフト管理ホーム画面 ---
     router.get('/home', requireLogin, (req, res) => {
-        // admin判定
         const isAdmin = (req.session.username === 'admin');
-
         res.render('shifts/home', {
             username: req.session.username,
-            isAdmin: isAdmin, // 管理者かどうかを渡す
-            moment: moment    // カレンダー描画に必要
+            isAdmin: isAdmin,
+            moment: moment
         });
     });
 
@@ -29,7 +27,6 @@ module.exports = (pool) => {
             const startOfMonth = moment().startOf('month').format('YYYY-MM-DD');
             const endOfMonth = moment().endOf('month').format('YYYY-MM-DD');
 
-            // adminなら全ユーザー、一般なら自分のみのデータを取得
             let query = `
                 SELECT s.id, u.username, u.user_role, u.id as user_id,
                        DATE_FORMAT(s.shift_date, '%Y-%m-%d') as shift_date,
@@ -49,7 +46,6 @@ module.exports = (pool) => {
 
             const [shifts] = await pool.query(query, params);
 
-            // 合計時間の計算
             const totalHours = shifts.reduce((acc, s) => {
                 const start = moment(s.start_time, 'HH:mm');
                 const end = moment(s.end_time, 'HH:mm');
@@ -73,8 +69,6 @@ module.exports = (pool) => {
     router.post('/register', requireLogin, async (req, res) => {
         const { date, start, end, employee_id } = req.body;
         const isAdmin = (req.session.username === 'admin');
-        
-        // adminなら指定のID、一般なら自分のIDを使用
         const targetUserId = (isAdmin && employee_id) ? employee_id : req.session.userId;
 
         try {
@@ -85,6 +79,24 @@ module.exports = (pool) => {
             res.redirect('/shifts/register');
         } catch (e) { 
             res.redirect('/shifts/register?error=登録失敗'); 
+        }
+    });
+
+    // --- [POST] シフト削除（adminのみ） ---
+    router.post('/delete/:id', requireLogin, async (req, res) => {
+        // adminでなければ拒否
+        if (req.session.username !== 'admin') {
+            return res.status(403).send('権限がありません');
+        }
+
+        const shiftId = req.params.id;
+
+        try {
+            await pool.query('DELETE FROM shifts WHERE id = ?', [shiftId]);
+            res.redirect('/shifts/register'); 
+        } catch (e) {
+            console.error(e);
+            res.redirect('/shifts/register?error=削除に失敗しました');
         }
     });
 
