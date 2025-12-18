@@ -27,7 +27,7 @@
             margin: 0;
         }
 
-        /* コントロールエリア (ボタンやチェックボックス) */
+        /* コントロールエリア */
         .controls {
             display: flex;
             align-items: center;
@@ -38,7 +38,6 @@
             border-radius: 8px;
         }
 
-        /* 切り替えスイッチのスタイル */
         .toggle-wrapper {
             display: flex;
             align-items: center;
@@ -48,7 +47,6 @@
             user-select: none;
         }
         
-        /* 休憩バーを隠すための設定 (JSで使用) */
         .hide-breaks .break-color-bar {
             display: none !important;
         }
@@ -95,16 +93,40 @@
         .chart-row {
             display: flex;
             border-bottom: 1px solid #eee;
-            height: 50px;
+            height: 60px; /* 属性表示用に少し高くしました */
             align-items: center;
         }
         .user-label {
             width: 150px;
             padding: 0 10px;
-            font-weight: bold;
             border-right: 1px solid #dee2e6;
             flex-shrink: 0;
             background: #fff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* 属性タグのスタイル */
+        .role-badge {
+            font-size: 0.65rem;
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-bottom: 4px;
+            width: fit-content;
+            font-weight: bold;
+            color: white;
+            background-color: #6c757d; /* デフォルト色 */
+        }
+        /* 役割ごとの色分け */
+        .role-パート { background-color: #20c997; }
+        .role-アルバイト { background-color: #ff922b; }
+        .role-社員 { background-color: #339af0; }
+
+        .user-name {
+            font-weight: bold;
+            font-size: 0.95rem;
         }
 
         .timeline-area {
@@ -118,7 +140,7 @@
         .shift-bar {
             position: absolute;
             height: 28px;
-            top: 11px;
+            top: 16px; /* rowの高さに合わせて微調整 */
             background: #4dabf7;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
             display: flex;
@@ -141,7 +163,7 @@
             position: absolute;
             height: 100%;
             top: 0;
-            background-color: #ff9800; /* 休憩の色 */
+            background-color: #ff9800;
             z-index: 1;
         }
     </style>
@@ -172,12 +194,18 @@
             </div>
         </div>
 
-        <% allUsers.forEach(user => { %>
+        <% allUsers.forEach(userObj => { %>
             <div class="chart-row">
-                <div class="user-label"><%= user %></div>
+                <div class="user-label">
+                    <span class="role-badge role-<%= userObj.role %>">
+                        <%= userObj.role %>
+                    </span>
+                    <span class="user-name"><%= userObj.username %></span>
+                </div>
                 <div class="timeline-area">
                     <% 
-                        const shift = dailyShiftsMap[user];
+                        // サーバーから渡されたオブジェクトのusernameを使ってマッピング
+                        const shift = dailyShiftsMap[userObj.username];
                         if (shift) {
                             const dayStart = 7; 
                             const dayEnd = 20;
@@ -213,7 +241,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 
 <script>
-    // 休憩表示のON/OFFを切り替えるスクリプト
     const toggle = document.getElementById('breakToggle');
     const chart = document.getElementById('shiftChart');
 
