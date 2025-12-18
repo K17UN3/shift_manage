@@ -48,7 +48,7 @@ module.exports = (pool) => {
                 query += ` AND s.user_id = ? `;
                 params.push(req.session.userId);
             }
-            query += ` ORDER BY s.shift_date DESC, FIELD(u.user_role, 'パート', 'アルバイト', '社員')`;
+            query += ` ORDER BY FIELD(u.user_role, '社員', 'パート', 'アルバイト') ASC, s.shift_date DESC`;
 
             const [shifts] = await pool.query(query, params);
 
@@ -118,7 +118,7 @@ module.exports = (pool) => {
                  TIME_FORMAT(s.start_time, '%H:%i') as start_time, TIME_FORMAT(s.end_time, '%H:%i') as end_time
                  FROM shifts s JOIN users u ON s.user_id = u.id 
                  WHERE s.shift_date >= ? AND s.shift_date < ?
-                 ORDER BY FIELD(u.user_role, 'パート', 'アルバイト', '社員')`, [start, end]);
+                 ORDER BY FIELD(u.user_role, '社員', 'パート', 'アルバイト')`, [start, end]);
             const shiftsByDay = {};
             allShifts.forEach(s => { 
                 if (!shiftsByDay[s.shift_date]) shiftsByDay[s.shift_date] = []; 
@@ -134,7 +134,7 @@ module.exports = (pool) => {
         const isAdmin = (req.session.username === 'admin');
         try {
             const [dailyShiftsResult] = await pool.query(`SELECT u.username, TIME_FORMAT(s.start_time, '%H:%i') as start_time, TIME_FORMAT(s.end_time, '%H:%i') as end_time FROM shifts s JOIN users u ON s.user_id = u.id WHERE s.shift_date = ?`, [dateString]);
-            const [allUsersResult] = await pool.query(`SELECT id, username, user_role FROM users ORDER BY FIELD(user_role, 'パート', 'アルバイト', '社員'), id ASC`);
+            const [allUsersResult] = await pool.query(`SELECT id, username, user_role FROM users ORDER BY FIELD(user_role, '社員', 'パート', 'アルバイト'), id ASC`);
             const dailyShiftsMap = dailyShiftsResult.reduce((map, s) => { map[s.username] = { start: s.start_time, end: s.end_time }; return map; }, {});
             res.render('shifts/day_shifts', { targetDate: moment(dateString), allUsers: allUsersResult, dailyShiftsMap, moment, isAdmin, currentUsername: req.session.username });
         } catch (e) { res.status(500).send('エラー'); }

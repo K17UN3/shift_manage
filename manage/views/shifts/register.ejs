@@ -81,7 +81,10 @@
         <tbody>
             <% registeredShifts.forEach(shift => { %>
                 <tr>
-                    <td><strong><%= shift.username %></strong><br><small>ID:<%= shift.user_id %></small></td>
+                    <td>
+                        <strong><%= shift.username %></strong>
+                        <br><small style="color: #666;"><%= shift.user_role %></small>
+                    </td>
                     <td><%= shift.shift_date %></td>
                     <td><span class="time-badge"><%= shift.start_time %> - <%= shift.end_time %></span></td>
                     <% if (isAdmin) { %>
