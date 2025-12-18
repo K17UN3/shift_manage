@@ -12,23 +12,26 @@ module.exports = (pool) => {
         res.render('auth/register', { error: null });
     });
 
-    // ユーザー登録処理の実行 (POST /register)
+    // ユーザー登録処理の実行
     router.post('/register', async (req, res) => {
-        // パスワードは不要なため、usernameのみを取得
-        const { username } = req.body; 
+        // username と user_roleを取得
+        const { username, user_role } = req.body; 
 
-        if (!username) {
-            // usernameが空の場合はエラーを返す
-            return res.render('auth/register', { error: '個人識別番号を入力してください。' });
+        if (!username || !user_role) {
+            return res.render('auth/register', { error: 'すべての項目を入力してください。' });
         }
 
         try {
-            // usersテーブル作成（passwordカラムは残すが、今回は使用しない）
+            // 【重要】最新のテーブル構造 (id, username, user_role) で作成
             await pool.query(
-                'CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(255) UNIQUE, password VARCHAR(255))'
+                `CREATE TABLE IF NOT EXISTS users (
+                    id INT AUTO_INCREMENT PRIMARY KEY, 
+                    username VARCHAR(255) UNIQUE, 
+                    user_role VARCHAR(20) NOT NULL
+                )`
             );
 
-            // ユーザー名の重複をチェック
+            // ユーザー名の重複チェック
             const [existingUser] = await pool.query(
                 'SELECT * FROM users WHERE username = ?',
                 [username]
@@ -38,12 +41,12 @@ module.exports = (pool) => {
                 return res.render('auth/register', { error: 'その個人識別番号は既に使われています。' });
             }
 
-            // データベースに新しいユーザーを挿入
-            // パスワードには空文字列を設定 ('')
+            // 【重要】user_roleも含めてデータベースに挿入
             await pool.query(
-                'INSERT INTO users (username, password) VALUES (?, ?)',
-                [username, ''] // パスワードとして空文字列を挿入
+                'INSERT INTO users (username, user_role) VALUES (?, ?)',
+                [username, user_role]
             );
+
             res.redirect('/'); 
 
         } catch (error) {
@@ -52,34 +55,30 @@ module.exports = (pool) => {
         }
     });
 
-    // ログイン処理 (POST /login)
+    // ログイン処理
     router.post('/login', async (req, res) => {
         const { username } = req.body;
 
         try {
-            // ... (usersテーブル作成のクエリは省略)
-            
-            // 認証は username の一致のみで行う
+            // 認証は username の一致のみ
             const [rows] = await pool.query(
                 'SELECT * FROM users WHERE username = ?', 
                 [username]
             );
 
             if (rows.length > 0) {
-                // 認証成功
                 req.session.isLoggedIn = true;
                 req.session.username = username;
+                req.session.userId = rows[0].id; // ユーザーIDを保存
+                req.session.user_role = rows[0].user_role; // 属性もセッションに入れておくと便利
                 
-                // 【重要修正】ログイン成功時にユーザーIDもセッションに保存
-                req.session.userId = rows[0].id; 
-                
-                console.log(`User ${username} logged in successfully.`);
                 res.redirect('/shifts/home');
             } else {
-                // ... (省略)
+                res.render('auth/login', { error: '個人識別番号が見つかりません。' });
             }
         } catch (error) {
-            // ... (省略)
+            console.error('ログインエラー:', error);
+            res.status(500).send('サーバーエラー');
         }
     });
 

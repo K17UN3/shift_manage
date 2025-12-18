@@ -15,13 +15,13 @@ module.exports = (pool) => {
             const startOfMonth = moment().startOf('month').format('YYYY-MM-DD');
             const endOfMonth = moment().endOf('month').format('YYYY-MM-DD');
             const [shifts] = await pool.query(
-                `SELECT s.id, u.username, u.role, u.id as user_id,
+                `SELECT s.id, u.username, u.user_role, u.id as user_id,
                         DATE_FORMAT(s.shift_date, '%Y-%m-%d') as shift_date,
                         TIME_FORMAT(s.start_time, '%H:%i') as start_time,
                         TIME_FORMAT(s.end_time, '%H:%i') as end_time
                  FROM shifts s JOIN users u ON s.user_id = u.id
                  WHERE s.shift_date BETWEEN ? AND ?
-                 ORDER BY s.shift_date DESC, FIELD(u.role, 'パート', 'アルバイト', '社員')`,
+                 ORDER BY s.shift_date DESC, FIELD(u.user_role, 'パート', 'アルバイト', '社員')`,
                 [startOfMonth, endOfMonth]
             );
             const totalHours = shifts.reduce((acc, s) => {
@@ -70,7 +70,7 @@ module.exports = (pool) => {
             
             // 重要：パート ＞ アルバイト ＞ 社員の順でユーザーを取得
             const [allUsersResult] = await pool.query(
-                `SELECT username, role FROM users ORDER BY FIELD(role, 'パート', 'アルバイト', '社員'), id ASC`);
+                `SELECT username, user_role FROM users ORDER BY FIELD(user_role, 'パート', 'アルバイト', '社員'), id ASC`);
 
             const dailyShiftsMap = dailyShiftsResult.reduce((map, s) => {
                 map[s.username] = { start: s.start_time, end: s.end_time };
