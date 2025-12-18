@@ -1,39 +1,230 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
+    <meta charset="UTF-8">
     <title><%= targetDate.format('YYYY年MM月DD日') %> シフト管理</title>
-    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        body {
+            font-family: "Helvetica Neue", Arial, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            font-size: 1.5rem;
+            color: #1a1a1a;
+            border-left: 5px solid #007bff;
+            padding-left: 15px;
+            margin: 0;
+        }
+
+        /* コントロールエリア (ボタンやチェックボックス) */
+        .controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 20px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        /* 切り替えスイッチのスタイル */
+        .toggle-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        /* 休憩バーを隠すための設定 (JSで使用) */
+        .hide-breaks .break-color-bar {
+            display: none !important;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #007bff;
+            font-weight: bold;
+        }
+
+        /* チャートの構造 */
+        .shift-chart {
+            border: 1px solid #e0e0e0;
+            overflow: hidden;
+        }
+
+        .chart-header {
+            display: flex;
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+        }
+        .user-name-col {
+            width: 150px;
+            padding: 10px;
+            font-weight: bold;
+            border-right: 1px solid #dee2e6;
+            flex-shrink: 0;
+            background: #f8f9fa;
+        }
+        .time-slots-container {
+            display: flex;
+            flex-grow: 1;
+            position: relative;
+        }
+        .time-label {
+            flex: 1;
+            font-size: 0.75rem;
+            padding: 10px 0;
+            text-align: center;
+            border-right: 1px solid #eee;
+            color: #666;
+        }
+
+        .chart-row {
+            display: flex;
+            border-bottom: 1px solid #eee;
+            height: 50px;
+            align-items: center;
+        }
+        .user-label {
+            width: 150px;
+            padding: 0 10px;
+            font-weight: bold;
+            border-right: 1px solid #dee2e6;
+            flex-shrink: 0;
+            background: #fff;
+        }
+
+        .timeline-area {
+            flex-grow: 1;
+            position: relative;
+            height: 100%;
+            background-image: linear-gradient(to right, #f1f1f1 1px, transparent 1px);
+            background-size: calc(100% / 13) 100%;
+        }
+
+        .shift-bar {
+            position: absolute;
+            height: 28px;
+            top: 11px;
+            background: #4dabf7;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: bold;
+            transition: transform 0.2s;
+            overflow: hidden;
+        }
+        
+        .shift-time-text {
+            position: relative;
+            z-index: 3;
+            padding: 0 8px;
+            white-space: nowrap;
+        }
+
+        .break-color-bar {
+            position: absolute;
+            height: 100%;
+            top: 0;
+            background-color: #ff9800; /* 休憩の色 */
+            z-index: 1;
+        }
+    </style>
 </head>
 <body>
-    <h1><%= targetDate.format('YYYY年MM月DD日 (ddd)') %> シフト管理</h1>
-    <p><a href="/shifts/view">カレンダーに戻る</a></p>
 
-    <div class="daily-shift-grid">
-        <div class="time-column-header">時間</div>
-        
-        <% allUsers.forEach(user => { %>
-            <div class="user-column-header"><%= user %></div>
-        <% }); %>
-
-        <% 
-            // 8:00から23:00まで、30分刻みの時間帯を作成
-            for (let h = 8; h <= 23; h++) {
-                for (let m = 0; m < 60; m += 30) {
-                    const timeString = moment({ hour: h, minute: m }).format('HH:mm');
-        %>
-            <div class="time-cell"><%= timeString %></div>
-            
-            <% allUsers.forEach(user => { %>
-                <div class="shift-slot user-<%= user %>">
-                    シフト入力
-                </div>
-            <% }); %>
-        <%
-                }
-            }
-        %>
+<div class="container">
+    <div class="nav-links">
+        <a href="/shifts/view">← カレンダーに戻る</a>
     </div>
 
+    <div class="controls">
+        <h1>📅 <%= targetDate.format('YYYY年MM月DD日 (ddd)') %></h1>
+        
+        <label class="toggle-wrapper">
+            <input type="checkbox" id="breakToggle" checked>
+            休憩を表示する
+        </label>
+    </div>
+
+    <div class="shift-chart" id="shiftChart">
+        <div class="chart-header">
+            <div class="user-name-col">従業員名</div>
+            <div class="time-slots-container">
+                <% for (let h = 7; h <= 19; h++) { %>
+                    <div class="time-label"><%= h %>:00</div>
+                <% } %>
+            </div>
+        </div>
+
+        <% allUsers.forEach(user => { %>
+            <div class="chart-row">
+                <div class="user-label"><%= user %></div>
+                <div class="timeline-area">
+                    <% 
+                        const shift = dailyShiftsMap[user];
+                        if (shift) {
+                            const dayStart = 7; 
+                            const dayEnd = 20;
+                            const totalWidthHours = dayEnd - dayStart;
+
+                            const sTime = moment(shift.start, 'HH:mm');
+                            const eTime = moment(shift.end, 'HH:mm');
+
+                            const startDecimal = sTime.hours() + sTime.minutes() / 60;
+                            const endDecimal = eTime.hours() + eTime.minutes() / 60;
+
+                            const leftPercent = ((startDecimal - dayStart) / totalWidthHours) * 100;
+                            const widthPercent = ((endDecimal - startDecimal) / totalWidthHours) * 100;
+                            
+                            const durationHours = endDecimal - startDecimal;
+                            const hasBreak = durationHours >= 6;
+                    %>
+                        <div class="shift-bar" style="left: <%= leftPercent %>%; width: <%= widthPercent %>%;">
+                            <% if (hasBreak) { %>
+                                <div class="break-color-bar" style="left: <%= (4 / durationHours) * 100 %>%; width: <%= (1 / durationHours) * 100 %>%;"></div>
+                            <% } %>
+                            <span class="shift-time-text">
+                                <%= shift.start %> - <%= shift.end %>
+                            </span>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        <% }); %>
+    </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+
+<script>
+    // 休憩表示のON/OFFを切り替えるスクリプト
+    const toggle = document.getElementById('breakToggle');
+    const chart = document.getElementById('shiftChart');
+
+    toggle.addEventListener('change', function() {
+        if (this.checked) {
+            chart.classList.remove('hide-breaks');
+        } else {
+            chart.classList.add('hide-breaks');
+        }
+    });
+</script>
+
 </body>
 </html>
