@@ -2,15 +2,62 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ログイン</title>
     <style>
-        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f8f9fa; margin: 0; }
-        .card { background: white; padding: 30px; border-radius: 8px; border: 1px solid #ddd; width: 100%; max-width: 320px; }
-        h1 { font-size: 1.1rem; margin-bottom: 20px; text-align: center; }
-        input { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        .btn { width: 100%; padding: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .error { color: #d00; font-size: 0.8rem; margin-bottom: 10px; text-align: center; }
-        .link { display: block; text-align: center; margin-top: 15px; font-size: 0.8rem; color: #666; text-decoration: none; }
+        /* 全体設定：余白を消し、中央に配置 */
+        body {
+            margin: 0;
+            background: #f8f9fa;
+            font-family: sans-serif;
+            display: grid;
+            place-items: center;
+            min-height: 100vh;
+        }
+
+        /* カード：スマホでは90%、PCでは最大400px */
+        .card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid #ddd;
+            width: 90%;
+            max-width: 400px;
+            box-sizing: border-box;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        h1 { font-size: 1.5rem; margin: 0 0 1.5rem; text-align: center; }
+
+        /* 入力欄とボタン：太さを出してタップしやすく */
+        input, .btn {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 1rem;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 16px; /* ズーム防止 */
+        }
+
+        input { border: 1px solid #ccc; }
+
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .error { color: #d00; font-size: 0.85rem; margin-bottom: 1rem; text-align: center; }
+        
+        .link { 
+            display: block; 
+            text-align: center; 
+            font-size: 0.9rem; 
+            color: #007bff; 
+            text-decoration: none; 
+        }
     </style>
 </head>
 <body>
@@ -21,7 +68,7 @@
         <input type="text" name="username" placeholder="お名前を入力" required>
         <button type="submit" class="btn">ログイン</button>
     </form>
-    <a href="/register" class="link">新規登録</a>
+    <a href="/register" class="link">新規登録はこちら</a>
 </div>
 </body>
 </html>
