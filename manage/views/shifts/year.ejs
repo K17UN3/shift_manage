@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>年間シフト全体表</title>
+    <style>
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 1100px; margin: 0 auto; }
+        
+        /* ヘッダー周り */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; background: white; padding: 15px 25px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        h1 { font-size: 1.3rem; margin: 0; display: flex; align-items: center; gap: 10px; }
+        .admin-badge { background: #e7f5ff; color: #1971c2; font-size: 0.7rem; padding: 3px 8px; border-radius: 4px; }
+
+        /* 年移動ナビ */
+        .year-nav { display: flex; align-items: center; gap: 20px; font-size: 1.2rem; font-weight: bold; }
+        .nav-link { text-decoration: none; color: #007bff; padding: 5px 12px; border: 1px solid #007bff; border-radius: 6px; font-size: 0.9rem; transition: 0.2s; }
+        .nav-link:hover { background: #007bff; color: white; }
+
+        /* 12ヶ月グリッド */
+        .month-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); 
+            gap: 20px; 
+        }
+
+        /* 月パネル */
+        .month-card { 
+            background: white; border-radius: 15px; padding: 25px; text-align: center; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02); cursor: pointer; transition: all 0.3s ease;
+            position: relative; overflow: hidden; border: 2px solid transparent;
+        }
+        .month-card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); border-color: #007bff; }
+        .month-card.no-data { background: #fafafa; opacity: 0.8; }
+
+        .month-number { font-size: 2rem; font-weight: 800; color: #e9ecef; position: absolute; top: 10px; right: 20px; z-index: 0; }
+        .month-title { position: relative; z-index: 1; font-size: 1.4rem; font-weight: bold; margin-bottom: 5px; }
+        .month-english { color: #adb5bd; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* クリックで開く詳細エリア */
+        .stats-area { 
+            margin-top: 20px; padding-top: 15px; border-top: 1px solid #f1f3f5; 
+            display: none; animation: slideDown 0.3s ease-out;
+        }
+        .month-card.active { border-color: #007bff; background: #fff; }
+        .month-card.active .stats-area { display: block; }
+
+        .stat-row { display: flex; justify-content: space-between; margin: 10px 0; font-size: 0.95rem; }
+        .stat-label { color: #666; }
+        .stat-value { font-weight: bold; color: #007bff; font-size: 1.1rem; }
+
+        .btn-view { display: block; margin-top: 15px; background: #007bff; color: white; text-decoration: none; padding: 8px; border-radius: 8px; font-size: 0.8rem; }
+        
+        /* シフトの有無を示すドット */
+        .has-data-dot { width: 8px; height: 8px; background: #20c997; border-radius: 50%; margin: 10px auto 0; }
+
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div>
+            <a href="/shifts/home" style="text-decoration:none; color:#666; font-size:0.85rem;">← ホームへ戻る</a>
+            <h1>📅 <%= targetYear %>年 年間統計 
+                <% if (isAdmin) { %><span class="admin-badge">管理者：全員分</span><% } %>
+            </h1>
+        </div>
+        
+        <div style="text-align: right; background: #fff; padding: 10px 20px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+            <div style="font-size: 0.75rem; color: #888; margin-bottom: 3px;">YEARLY TOTAL</div>
+            <div style="font-weight: bold;">
+                <span style="font-size: 1.2rem; color: #007bff;"><%= yearlyTotalDays %></span> <small>日</small> / 
+                <span style="font-size: 1.2rem; color: #007bff;"><%= yearlyTotalHours %></span> <small>h</small>
+            </div>
+        </div>
+
+        <div class="year-nav">
+            <a href="/shifts/year/<%= targetYear - 1 %>" class="nav-link">◀ 前年</a>
+            <span><%= targetYear %>年</span>
+            <a href="/shifts/year/<%= targetYear + 1 %>" class="nav-link">次年 ▶</a>
+        </div>
+    </div>
+
+    <div class="month-grid">
+        <% 
+            const enMonths = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        %>
+        
+        <% monthlyData.forEach((data, index) => { %>
+            <div class="month-card <%= data.days > 0 ? '' : 'no-data' %>" onclick="this.classList.toggle('active')">
+                <div class="month-number"><%= data.month %></div>
+                <div class="month-title"><%= data.month %>月</div>
+                <div class="month-english"><%= enMonths[index] %></div>
+                
+                <% if (data.days > 0) { %>
+                    <div class="has-data-dot"></div>
+                    <div class="stats-area">
+                        <div class="stat-row">
+                            <span class="stat-label">出勤日数</span>
+                            <span class="stat-value"><%= data.days %> 日</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">合計時間</span>
+                            <span class="stat-value"><%= data.hours %> h</span>
+                        </div>
+                        <a href="/shifts/view?date=<%= targetYear %>-<%= String(data.month).padStart(2, '0') %>-01" class="btn-view">
+                            カレンダーを見る
+                        </a>
+                    </div>
+                <% } else { %>
+                    <div style="margin-top:15px; font-size:0.8rem; color:#ccc;">データなし</div>
+                <% } %>
+            </div>
+        <% }); %>
+    </div>
+</div>
+
+</body>
+</html>

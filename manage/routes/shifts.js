@@ -140,5 +140,77 @@ module.exports = (pool) => {
         } catch (e) { res.status(500).send('エラー'); }
     });
 
+
+    // --- [GET] 年間全体表 ---
+    // requireLoginを追加してセキュリティを確保
+    router.get('/year/:year?', requireLogin, async (req, res) => {
+        try {
+            const targetYear = parseInt(req.params.year) || new Date().getFullYear();
+            // isAdminの判定を他のルートと統一
+            const isAdmin = (req.session.username === 'admin');
+            const userId = req.session.userId;
+
+            let query = `
+                SELECT 
+                    MONTH(shift_date) as month,
+                    COUNT(DISTINCT shift_date) as total_days,
+                    SUM(TIME_TO_SEC(TIMEDIFF(end_time, start_time)) / 3600) as total_hours
+                FROM shifts
+                WHERE YEAR(shift_date) = ?
+            `;
+            
+            const params = [targetYear];
+
+            if (!isAdmin) {
+                query += ` AND user_id = ?`;
+                params.push(userId);
+            }
+
+            query += ` GROUP BY MONTH(shift_date) ORDER BY month ASC`;
+
+            const [stats] = await pool.query(query, params);
+
+            // 1月〜12月の初期化
+            const monthlyData = Array.from({ length: 12 }, (_, i) => ({
+                month: i + 1,
+                days: 0,
+                hours: 0
+            }));
+
+            // 年間合計を算出するための変数
+            let yearlyTotalDays = 0;
+            let yearlyTotalHours = 0;
+
+            stats.forEach(s => {
+                const idx = s.month - 1;
+                if (monthlyData[idx]) {
+                    const days = s.total_days || 0;
+                    const hours = Math.round((s.total_hours || 0) * 10) / 10;
+                    
+                    monthlyData[idx].days = days;
+                    monthlyData[idx].hours = hours;
+
+                    // 年間合計に加算
+                    yearlyTotalDays += days;
+                    yearlyTotalHours += hours;
+                }
+            });
+
+            res.render('shifts/year', {
+                targetYear,
+                monthlyData,
+                yearlyTotalDays,               // 追加：年間の総日数
+                yearlyTotalHours: yearlyTotalHours.toFixed(1), // 追加：年間の総時間
+                isAdmin,
+                username: req.session.username || 'スタッフ'
+            });
+
+        } catch (err) {
+            console.error("--- SQL実行エラー ---");
+            console.error(err.message);
+            res.status(500).send("エラーが発生しました: " + err.message);
+        }
+    });
+
     return router;
 };
