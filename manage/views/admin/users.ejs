@@ -2,19 +2,104 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>従業員管理</title>
     <style>
-        body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h1 { font-size: 1.4rem; border-left: 5px solid #e03131; padding-left: 15px; }
-        .form-section { background: #fff5f5; padding: 20px; border-radius: 10px; border: 1px solid #ffc9c9; margin-bottom: 30px; }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end; }
-        label { display: block; font-weight: bold; font-size: 0.8rem; margin-bottom: 5px; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
-        .btn-add { background: #e03131; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        .user-table { width: 100%; border-collapse: collapse; }
-        .user-table th, .user-table td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
-        .role-badge { padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; background: #eee; }
+        /* 基本スタイル */
+        body { 
+            font-family: sans-serif; 
+            background: #f0f2f5; 
+            margin: 0; 
+            padding: 15px; /* スマホ用に余白を少し調整 */
+            box-sizing: border-box;
+        }
+
+        /* コンテナ：スマホでは横幅いっぱいに、PCでは最大800px */
+        .container { 
+            width: 100%;
+            max-width: 800px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 20px; /* スマホ用にパディングを調整 */
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+            box-sizing: border-box;
+        }
+
+        /* ヘッダー周り */
+        .header-top {
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        h1 { font-size: 1.25rem; border-left: 5px solid #e03131; padding-left: 15px; margin: 0; }
+        
+        /* 登録フォームセクション */
+        .form-section { 
+            background: #fff5f5; 
+            padding: 15px; 
+            border-radius: 10px; 
+            border: 1px solid #ffc9c9; 
+            margin-bottom: 30px; 
+        }
+
+        /* --- レスポンシブなフォームグリッド --- */
+        .form-grid { 
+            display: grid; 
+            grid-template-columns: 1fr; /* スマホでは縦1列 */
+            gap: 15px; 
+            align-items: end; 
+        }
+
+        /* PC（600px以上）では元の横並びにする */
+        @media (min-width: 600px) {
+            .form-grid { grid-template-columns: 1fr 1fr auto; }
+            .container { padding: 30px; }
+            .form-section { padding: 20px; }
+        }
+
+        label { display: block; font-weight: bold; font-size: 0.85rem; margin-bottom: 5px; color: #555; }
+        input, select { 
+            width: 100%; 
+            padding: 12px; 
+            border: 1px solid #ddd; 
+            border-radius: 6px; 
+            box-sizing: border-box; 
+            font-size: 16px; /* スマホのズーム防止 */
+        }
+
+        .btn-add { 
+            background: #e03131; 
+            color: white; 
+            border: none; 
+            padding: 12px 20px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: 1rem;
+        }
+
+        /* 従業員一覧テーブル */
+        .table-wrapper { width: 100%; overflow-x: auto; } /* はみ出し対策 */
+        .user-table { width: 100%; border-collapse: collapse; min-width: 300px; }
+        .user-table th, .user-table td { 
+            padding: 12px 8px; 
+            text-align: left; 
+            border-bottom: 1px solid #eee; 
+            font-size: 0.95rem;
+        }
+        .role-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; background: #eee; white-space: nowrap; }
+
+        .btn-delete {
+            color: #e03131; 
+            background: none; 
+            border: none; 
+            cursor: pointer; 
+            text-decoration: underline; 
+            font-size: 0.85rem; 
+            padding: 8px 0;
+        }
     </style>
 </head>
 <body>
