@@ -2,41 +2,73 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ホーム</title>
     <style>
-        body { font-family: sans-serif; background: #f8f9fa; margin: 0; padding: 20px; color: #333; }
-        .container { max-width: 400px; margin: 0 auto; text-align: center; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        /* 基本スタイル：余計な余白を削り、中央寄せに */
+        body { 
+            font-family: sans-serif; 
+            background: #f8f9fa; 
+            margin: 0; 
+            padding: 20px 10px; /* 左右に少しだけ余白を持たせる */
+            color: #333; 
+            box-sizing: border-box;
+        }
+
+        /* 画面幅の調整：スマホでは画面の約95%、PCでは最大400px */
+        .container { 
+            width: 95%; 
+            max-width: 400px; 
+            margin: 0 auto; 
+            text-align: center; 
+            box-sizing: border-box;
+        }
+
+        /* ヘッダー：名前とログアウト */
+        .header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 30px; 
+        }
         h1 { font-size: 1.1rem; margin: 0; }
         .btn-logout { font-size: 0.8rem; color: #999; text-decoration: none; }
 
-        /* メニューボタンのスタイル */
+        /* 今日の日付表示 */
+        .today-info { font-size: 0.95rem; color: #666; margin-bottom: 25px; }
+
+        /* メニューボタンのリスト：隙間を維持 */
         .menu-list { display: flex; flex-direction: column; gap: 15px; }
+
+        /* メニュー項目：見た目はそのまま、タップしやすく */
         .menu-item {
             background: white;
-            padding: 20px;
-            border-radius: 10px;
+            padding: 22px 15px; /* 上下を少し厚くして押しやすく */
+            border-radius: 12px;
             border: 1px solid #ddd;
             text-decoration: none;
             color: #333;
             font-weight: bold;
             font-size: 1rem;
-            transition: transform 0.1s, background 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .menu-item:hover {
-            background: #f1f3f5;
-            transform: translateY(-2px);
-        }
-        .menu-item:active {
-            transform: translateY(0);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            transition: background 0.2s, transform 0.1s;
         }
         
-        /* 今日の日付表示 */
-        .today-info { font-size: 0.9rem; color: #666; margin-bottom: 20px; }
+        /* 押し心地を良くする設定 */
+        .menu-item:active {
+            background: #f1f3f5;
+            transform: scale(0.98);
+        }
+
+        /* 管理者用ボタン：色はそのまま維持 */
+        .admin-item {
+            background: #fff5f5 !important;
+            border-color: #ffc9c9 !important;
+            color: #e03131 !important;
+        }
     </style>
 </head>
 <body>

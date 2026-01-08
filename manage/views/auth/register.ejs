@@ -5,19 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>新規登録</title>
     <style>
-        /* レイアウトの最小化：中央寄せ */
-        body {
+        /* htmlとbodyを画面いっぱいに固定し、スクロールを禁止にする */
+        html, body {
+            height: 100%;
             margin: 0;
-            background: #f8f9fa;
+            overflow: hidden; /* 画面全体のスクロールを無効化 */
+            overscroll-behavior: none; /* スマホ特有の跳ね返り（バウンス）を防止 */
+        }
+
+        body {
             font-family: sans-serif;
+            background: #f8f9fa;
             display: grid;
             place-items: center;
-            min-height: 100vh;
-            padding: 20px;
+            /* dvh（ダイナミック・ビューポート・ヘイト）を使うと、スマホのバーを考慮した完璧な高さになります */
+            height: 100dvh; 
+            padding: 0; /* bodyのパディングを0に。これでハミ出しを防ぎます */
             box-sizing: border-box;
         }
 
-        /* カード：スマホで横幅90%を確保 */
+        /* カード：中身がはみ出ないよう調整 */
         .card {
             background: white;
             padding: 2rem;
@@ -27,23 +34,24 @@
             max-width: 400px;
             box-sizing: border-box;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            /* 万が一、画面の小さいスマホでボタンが隠れた場合のみ、カード内だけスクロールできるようにします */
+            max-height: 95dvh;
+            overflow-y: auto;
         }
 
         h1 { font-size: 1.5rem; margin: 0 0 1.5rem; text-align: center; color: #333; }
 
-        /* 入力・選択・ボタンを大きく統一 */
         input, select, .btn {
             width: 100%;
             padding: 12px;
             margin-bottom: 1rem;
             border-radius: 6px;
             box-sizing: border-box;
-            font-size: 16px; /* スマホの自動ズーム防止 */
+            font-size: 16px;
         }
 
         input, select { border: 1px solid #ccc; background: #fff; }
 
-        /* 登録ボタン：ログインボタンと色味を合わせる場合は #007bff へ */
         .btn {
             background: #333;
             color: white;
