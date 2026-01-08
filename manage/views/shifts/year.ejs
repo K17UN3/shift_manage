@@ -22,6 +22,8 @@
             display: grid; 
             grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); 
             gap: 20px; 
+            /* align-items: start を入れることで、隣のカードが一緒に伸びるのを防ぎます */
+            align-items: start; 
         }
 
         /* 月パネル */
@@ -62,8 +64,8 @@
 <div class="container">
     <div class="header">
         <div>
-            <a href="/shifts/home" style="text-decoration:none; color:#666; font-size:0.85rem;">← ホームへ戻る</a>
-            <h1>📅 <%= targetYear %>年 年間統計 
+            <a href="/shifts/home" style="text-decoration:none; color:#007bff; font-size:0.85rem;">← ホームへ戻る</a>
+            <h1><%= targetYear %>年 年間統計 
                 <% if (isAdmin) { %><span class="admin-badge">管理者：全員分</span><% } %>
             </h1>
         </div>
@@ -89,7 +91,7 @@
         %>
         
         <% monthlyData.forEach((data, index) => { %>
-            <div class="month-card <%= data.days > 0 ? '' : 'no-data' %>" onclick="this.classList.toggle('active')">
+            <div class="month-card <%= data.days > 0 ? '' : 'no-data' %>" onclick="toggleMonthCard(this)">
                 <div class="month-number"><%= data.month %></div>
                 <div class="month-title"><%= data.month %>月</div>
                 <div class="month-english"><%= enMonths[index] %></div>
@@ -105,7 +107,7 @@
                             <span class="stat-label">合計時間</span>
                             <span class="stat-value"><%= data.hours %> h</span>
                         </div>
-                        <a href="/shifts/view?date=<%= targetYear %>-<%= String(data.month).padStart(2, '0') %>-01" class="btn-view">
+                        <a href="/shifts/view?month=<%= targetYear %>-<%= String(data.month).padStart(2, '0') %>" class="btn-view">
                             カレンダーを見る
                         </a>
                     </div>
@@ -116,6 +118,26 @@
         <% }); %>
     </div>
 </div>
+
+<script>
+    /**
+     * 月カードの開閉制御
+     * クリックされたカードを開き、それ以外のカードを閉じます。
+     */
+    function toggleMonthCard(selectedCard) {
+        const allCards = document.querySelectorAll('.month-card');
+        
+        allCards.forEach(card => {
+            if (card === selectedCard) {
+                // クリックされたカードの開閉を切り替える
+                card.classList.toggle('active');
+            } else {
+                // クリックされていない他のカードはすべて閉じる
+                card.classList.remove('active');
+            }
+        });
+    }
+</script>
 
 </body>
 </html>
