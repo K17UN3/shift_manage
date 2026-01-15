@@ -18,10 +18,10 @@
         </div>
 
         <div class="time-axis">
-            <div class="time-axis-spacer" style="width: 120px;"></div>
-            <div class="time-labels" style="flex-grow: 1; display: flex; justify-content: space-between; font-size: 0.65rem; color: #999;">
+            <div class="time-axis-spacer"></div>
+            <div class="time-labels">
                 <% for(let i=0; i<=24; i+=2) { %>
-                    <div class="time-label" style="position: relative;">
+                    <div class="time-label" style="grid-column-start: <%= i + 1 %>;">
                         <%= i %>:00
                     </div>
                 <% } %>

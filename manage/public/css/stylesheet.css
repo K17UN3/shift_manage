@@ -161,34 +161,67 @@ h1 {
 }
 
 /* ==========================================
-   4. タイムライン表示 (24h Chart)
+   4. タイムライン表示 (24h Chart) - 修正版
    ========================================== */
-.time-axis { display: flex; align-items: flex-end; margin-bottom: 5px; }
-.time-axis-spacer { width: 120px; }
-.time-labels { 
-    flex-grow: 1; display: flex; justify-content: space-between; 
-    font-size: 0.65rem; color: #999; padding-bottom: 2px; position: relative;
+.time-axis { 
+    display: flex; 
+    margin-bottom: 15px; /* ラベル下の余白を少し確保 */
 }
-.time-label { position: relative; flex: 1; text-align: left; }
+.time-axis-spacer { 
+    width: 120px; 
+    flex-shrink: 0; 
+}
+
+.time-labels { 
+    flex-grow: 1; 
+    display: grid;
+    /* 24時間を24等分する */
+    grid-template-columns: repeat(24, 1fr);
+    font-size: 0.65rem; 
+    color: #999; 
+    position: relative;
+    height: 1.2rem;
+}
+
+.time-label { 
+    position: relative;
+    /* 文字の開始位置をグリッド線の真上に持ってくる */
+    margin-left: -1px; 
+}
+
 .time-label::after {
-    content: ""; position: absolute; left: 0; bottom: -5px;
-    width: 1px; height: 5px; background: #bbb;
+    content: ""; 
+    position: absolute; 
+    left: 0; 
+    bottom: -8px; /* 目盛りの線 */
+    width: 1px; 
+    height: 6px; 
+    background: #bbb;
+    display: none;
 }
 
 .chart { border-top: 1px solid #eee; }
 .row { display: flex; border-bottom: 1px solid #ddd; height: 50px; align-items: center; }
-.name-col { width: 120px; font-size: 0.85rem; font-weight: bold; color: #333; }
+.name-col { width: 120px; flex-shrink: 0; font-size: 0.85rem; font-weight: bold; color: #333; }
 
 .timeline { 
-    flex-grow: 1; position: relative; height: 100%; 
+    flex-grow: 1; 
+    position: relative; 
+    height: 100%; 
+    /* 1時間ごとに正確に背景線を引く */
     background-image: linear-gradient(to right, #e0e0e0 1px, transparent 1px);
     background-size: calc(100% / 24) 100%; 
+    /* 0時の線を表示するために左端にボーダーを追加 */
+    border-left: 1px solid #e0e0e0; 
 }
 
 .timeline::before {
-    content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    content: ""; 
+    position: absolute; 
+    top: 0; left: 0; right: 0; bottom: 0;
+    /* 2時間ごとの補助線をラベルの位置と合わせる */
     background-image: linear-gradient(to right, #ccc 1px, transparent 1px);
-    background-size: calc(100% / 4) 100%; /* 6時間ごと */
+    background-size: calc(100% / 12) 100%; 
     pointer-events: none;
 }
 
