@@ -78,20 +78,29 @@ module.exports = (pool) => {
     router.post('/register', requireLogin, async (req, res) => {
         const { date, start, end, employee_id } = req.body;
         const isAdmin = (req.session.username === 'admin');
+        
+        // adminなら選択されたID、一般なら自分のIDを使用する（この定義が必要）
         const targetUserId = (isAdmin && employee_id) ? employee_id : req.session.userId;
 
-        // --- 時間制限のバリデーションを追加 ---
+        // 1. 開始と終了が同じならエラー
+        if (start === end) {
+            return res.redirect('/shifts/register?error=開始と終了を同じにはできません');
+        }
+
+        // 2. 08:30~19:30 のバリデーション（万が一のためにシステム的には保存を許可するが、一応チェックは残す場合）
+        // ※もし完全に自由にしたい場合は、以下のStartTime/EndTimeのチェックブロックを消してください
         const startTime = moment(start, 'HH:mm');
         const endTime = moment(end, 'HH:mm');
         const minTime = moment('08:30', 'HH:mm');
         const maxTime = moment('19:30', 'HH:mm');
 
-        if (!startTime.isBefore(endTime)) {
-            return res.redirect('/shifts/register?error=時間は終了時間を開始時間より後に設定してください');
-        }
-
-        if (startTime.isBefore(minTime) || endTime.isAfter(maxTime)) {
-            return res.redirect('/shifts/register?error=登録可能時間は08:30から19:30までです');
+        // 日を跨がない（start < end）かつ、時間外の場合は警告を出す例
+        // 日を跨ぐ（start > end）場合は「万が一」のケースとして通す
+        if (startTime.isBefore(endTime)) {
+             if (startTime.isBefore(minTime) || endTime.isAfter(maxTime)) {
+                 // 厳格に制限したいならここでreturn res.redirect...
+                 console.log("警告: 通常の営業時間外のシフトです");
+             }
         }
 
         try {
@@ -101,6 +110,7 @@ module.exports = (pool) => {
             );
             res.redirect('/shifts/register');
         } catch (e) { 
+            console.error(e);
             res.redirect('/shifts/register?error=登録失敗'); 
         }
     });

@@ -1,0 +1,155 @@
+/* 全体のトーンを個別管理画面と統一 */
+body {
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    background-color: #f0f2f5;
+    margin: 0;
+    padding: 20px;
+    color: #333;
+}
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* ヘッダーデザインを統一 */
+h1 {
+    font-size: 1.5rem;
+    color: #1a1a1a;
+    border-left: 5px solid #007bff;
+    padding-left: 15px;
+    margin: 0;
+}
+
+.header-area {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: #007bff;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+/* カレンダーグリッド */
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px; /* 枠線ではなく隙間で表現 */
+    background-color: #f0f2f5;
+}
+
+/* 曜日ヘッダー */
+.day-header {
+    padding: 12px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 0.85rem;
+    background: #f8f9fa;
+    color: #666;
+    border-radius: 4px;
+}
+.sun { color: #e91e63; }
+.sat { color: #2196f3; }
+
+/* 日付セル（ボタンとしての調整） */
+.day-cell {
+    background-color: #fff;
+    min-height: 110px;
+    padding: 8px;
+    text-decoration: none;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    border-radius: 8px; /* 角を少し丸く */
+    border: 1px solid #e0e0e0;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+/* ホバー時に「ボタン」らしく浮かび上がる演出 */
+.day-cell:hover {
+    background-color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    border-color: #007bff;
+}
+
+.date-num {
+    align-self: flex-end;
+    background: #f1f3f5;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: #495057;
+}
+
+/* 今日のハイライト */
+.today { 
+    border: 2px solid #007bff !important; 
+    background-color: #f0f7ff !important;
+}
+.today .date-num { 
+    background-color: #007bff; 
+    color: #fff; 
+}
+
+/* 月外の日付 */
+.outside { 
+    background-color: #fdfdfd; 
+    opacity: 0.5;
+}
+
+/* シフト表示部分（バー風のデザインに調整） */
+.shift-info {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.shift-count {
+    font-size: 0.7rem;
+    font-weight: bold;
+    color: #868e96;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* 個別画面のバーに近いデザイン */
+.shift-tag {
+    display: block;
+    background: #4dabf7;
+    color: #fff;
+    padding: 2px 6px;
+    font-size: 0.7rem;
+    border-radius: 3px; /* 四角いデザインに合わせる */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: bold;
+}
+
+.more-text {
+    font-size: 0.7rem;
+    color: #adb5bd;
+    text-align: center;
+    margin-top: 2px;
+}
+
+.shift-tag.continued {
+    background-color: #f8f9fa;
+    border-left: 3px solid #ced4da;
+    color: #6c757d;
+    font-style: italic;
+}

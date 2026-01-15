@@ -24,7 +24,7 @@ const pool = mysql.createPool({
 
 // --- ミドルウェアの設定 ---
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'manage', 'public')));
 
 // セッション設定 (ルーティングより前に記述)
 app.use(session({
@@ -39,17 +39,15 @@ app.set('views', path.join(__dirname, 'manage', 'views'));
 
 // --- ルーティングの設定 ---
 
-// 1. 認証 (ログイン・ログアウト)
+// 認証 (ログイン・ログアウト)
 app.use('/', authRouter(pool));
 
-// 2. シフト管理 (登録・表示・削除)
+// シフト管理 (登録・表示・削除)
 app.use('/shifts', shiftsRouter(pool));
 
-// 3. 管理者機能 (従業員管理) ★追加
-// これにより /admin/users などのURLが有効になります
+// 管理者機能 (従業員管理) ★追加
 app.use('/admin', adminRouter(pool)); 
 
-// --- テスト用・その他 (必要に応じて) ---
 app.get('/test', async (req, res) => {
     res.render('test', { message: null });
 });
