@@ -78,9 +78,21 @@ module.exports = (pool) => {
     router.post('/register', requireLogin, async (req, res) => {
         const { date, start, end, employee_id } = req.body;
         const isAdmin = (req.session.username === 'admin');
-        
-        // adminなら選択されたID、一般なら自分のID
         const targetUserId = (isAdmin && employee_id) ? employee_id : req.session.userId;
+
+        // --- 時間制限のバリデーションを追加 ---
+        const startTime = moment(start, 'HH:mm');
+        const endTime = moment(end, 'HH:mm');
+        const minTime = moment('08:30', 'HH:mm');
+        const maxTime = moment('19:30', 'HH:mm');
+
+        if (!startTime.isBefore(endTime)) {
+            return res.redirect('/shifts/register?error=時間は終了時間を開始時間より後に設定してください');
+        }
+
+        if (startTime.isBefore(minTime) || endTime.isAfter(maxTime)) {
+            return res.redirect('/shifts/register?error=登録可能時間は08:30から19:30までです');
+        }
 
         try {
             await pool.query(
