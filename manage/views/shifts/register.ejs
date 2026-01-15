@@ -131,28 +131,13 @@
                 <div style="display: flex; gap: 20px;">
                     <div style="flex:1">
                         <label>開始</label>
-                        <input type="time" name="start" id="start_time" required value="08:30" min="08:30" max="19:30" onchange="limitTime(this)">
+                        <input type="time" name="start" id="start_time" required value="08:30">
                     </div>
                     <div style="flex:1">
                         <label>終了</label>
-                        <input type="time" name="end" id="end_time" required value="17:00" min="08:30" max="19:30" onchange="limitTime(this)">
+                        <input type="time" name="end" id="end_time" required value="17:00">
                     </div>
                 </div>
-
-                <script>
-                    function limitTime(input) {
-                        const min = "08:30";
-                        const max = "19:30";
-                        
-                        if (input.value < min) {
-                            alert("08:30以前の時間は設定できません。");
-                            input.value = min;
-                        } else if (input.value > max) {
-                            alert("19:30以降の時間は設定できません。");
-                            input.value = max;
-                        }
-                    }
-                </script>
             </div>
             <button type="submit" class="btn-submit">登録する</button>
         </form>

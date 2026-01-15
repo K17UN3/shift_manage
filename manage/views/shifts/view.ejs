@@ -40,19 +40,28 @@
                     ...fromYesterday.map(s => ({ ...s, isContinued: true }))
                 ];
         %>
-            <a href="/shifts/day/<%= dateString %>" class="day-cell ...">
-                <span class="date-num"><%= date.date() %></span>
-                <div class="shift-info">
-                    <% if (allDisplayShifts.length > 0) { %>
-                        <div class="shift-count"><%= allDisplayShifts.length %>名</div>
-                            <% allDisplayShifts.slice(0, 3).forEach(shift => { %>
-                                <span class="shift-tag <%= shift.isContinued ? 'continued' : '' %>">
-                                    <%= shift.username %><%= shift.isContinued ? '〜' : '' %>
-                                </span>
-                            <% }); %>
-                    <% } %>
-                </div>
-            </a>
+        <a href="/shifts/day/<%= dateString %>" 
+        class="day-cell <%= !date.isSame(currentMonth, 'month') ? 'outside' : '' %> <%= date.isSame(today, 'day') ? 'today' : '' %>">
+            
+            <span class="date-num"><%= date.date() %></span>
+            
+            <div class="shift-info">
+                <% if (allDisplayShifts.length > 0) { %>
+                    <div class="shift-count"><%= allDisplayShifts.length %>名</div>
+                    <% allDisplayShifts.slice(0, 3).forEach(shift => { %>
+                        <span class="shift-tag <%= shift.isContinued ? 'continued' : '' %>">
+                            <% if (shift.isContinued) { %>
+                                〜<%= shift.username %>
+                            <% } else if (shift.end_time < shift.start_time) { %>
+                                <%= shift.username %>〜
+                            <% } else { %>
+                                <%= shift.username %>
+                            <% } %>
+                        </span>
+                    <% }); %>
+                <% } %>
+            </div>
+        </a>
         <%
                 date.add(1, 'day');
             }

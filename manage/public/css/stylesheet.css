@@ -1,11 +1,15 @@
-/* 全体のトーンを個別管理画面と統一 */
+/* ==========================================
+   1. 共通設定 (Base Styles)
+   ========================================== */
 body {
-    font-family: "Helvetica Neue", Arial, sans-serif;
+    font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", sans-serif;
     background-color: #f0f2f5;
     margin: 0;
     padding: 20px;
     color: #333;
+    box-sizing: border-box;
 }
+
 .container {
     max-width: 1200px;
     margin: 0 auto;
@@ -13,9 +17,9 @@ body {
     padding: 20px;
     border-radius: 12px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    box-sizing: border-box;
 }
 
-/* ヘッダーデザインを統一 */
 h1 {
     font-size: 1.5rem;
     color: #1a1a1a;
@@ -24,29 +28,67 @@ h1 {
     margin: 0;
 }
 
-.header-area {
+.header, .header-area, .header-top {
     display: flex;
     align-items: center;
     justify-content: space-between;
     margin-bottom: 20px;
 }
 
-.nav-links a {
+.nav-link, .nav-links a, .btn-logout {
     text-decoration: none;
     color: #007bff;
     font-weight: bold;
     font-size: 0.9rem;
 }
 
-/* カレンダーグリッド */
+/* ==========================================
+   2. ホーム画面メニュー (Home Menu)
+   ========================================== */
+.menu-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.menu-item {
+    background: white;
+    padding: 22px 15px;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    transition: background 0.2s, transform 0.1s;
+}
+
+.menu-item:active {
+    background: #f1f3f5;
+    transform: scale(0.98);
+}
+
+.admin-item {
+    background: #fff5f5 !important;
+    border-color: #ffc9c9 !important;
+    color: #e03131 !important;
+}
+
+/* ==========================================
+   3. シフトカレンダー (Calendar Grid)
+   ========================================== */
 .calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 8px; /* 枠線ではなく隙間で表現 */
+    gap: 8px;
     background-color: #f0f2f5;
 }
 
-/* 曜日ヘッダー */
 .day-header {
     padding: 12px;
     text-align: center;
@@ -59,7 +101,6 @@ h1 {
 .sun { color: #e91e63; }
 .sat { color: #2196f3; }
 
-/* 日付セル（ボタンとしての調整） */
 .day-cell {
     background-color: #fff;
     min-height: 110px;
@@ -68,15 +109,13 @@ h1 {
     color: #333;
     display: flex;
     flex-direction: column;
-    border-radius: 8px; /* 角を少し丸く */
+    border-radius: 8px;
     border: 1px solid #e0e0e0;
     transition: all 0.2s ease;
     box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
-/* ホバー時に「ボタン」らしく浮かび上がる演出 */
 .day-cell:hover {
-    background-color: #fff;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     border-color: #007bff;
@@ -92,64 +131,94 @@ h1 {
     color: #495057;
 }
 
-/* 今日のハイライト */
 .today { 
     border: 2px solid #007bff !important; 
     background-color: #f0f7ff !important;
 }
-.today .date-num { 
-    background-color: #007bff; 
-    color: #fff; 
-}
+.today .date-num { background-color: #007bff; color: #fff; }
+.outside { opacity: 0.5; }
 
-/* 月外の日付 */
-.outside { 
-    background-color: #fdfdfd; 
-    opacity: 0.5;
-}
+.shift-info { margin-top: 8px; display: flex; flex-direction: column; gap: 3px; }
+.shift-count { font-size: 0.7rem; font-weight: bold; color: #868e96; margin-bottom: 4px; }
 
-/* シフト表示部分（バー風のデザインに調整） */
-.shift-info {
-    margin-top: 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
-
-.shift-count {
-    font-size: 0.7rem;
-    font-weight: bold;
-    color: #868e96;
-    margin-bottom: 4px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-/* 個別画面のバーに近いデザイン */
 .shift-tag {
     display: block;
     background: #4dabf7;
     color: #fff;
     padding: 2px 6px;
     font-size: 0.7rem;
-    border-radius: 3px; /* 四角いデザインに合わせる */
+    border-radius: 3px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     font-weight: bold;
 }
-
-.more-text {
-    font-size: 0.7rem;
-    color: #adb5bd;
-    text-align: center;
-    margin-top: 2px;
-}
-
 .shift-tag.continued {
     background-color: #f8f9fa;
     border-left: 3px solid #ced4da;
     color: #6c757d;
     font-style: italic;
 }
+
+/* ==========================================
+   4. タイムライン表示 (24h Chart)
+   ========================================== */
+.time-axis { display: flex; align-items: flex-end; margin-bottom: 5px; }
+.time-axis-spacer { width: 120px; }
+.time-labels { 
+    flex-grow: 1; display: flex; justify-content: space-between; 
+    font-size: 0.65rem; color: #999; padding-bottom: 2px; position: relative;
+}
+.time-label { position: relative; flex: 1; text-align: left; }
+.time-label::after {
+    content: ""; position: absolute; left: 0; bottom: -5px;
+    width: 1px; height: 5px; background: #bbb;
+}
+
+.chart { border-top: 1px solid #eee; }
+.row { display: flex; border-bottom: 1px solid #ddd; height: 50px; align-items: center; }
+.name-col { width: 120px; font-size: 0.85rem; font-weight: bold; color: #333; }
+
+.timeline { 
+    flex-grow: 1; position: relative; height: 100%; 
+    background-image: linear-gradient(to right, #e0e0e0 1px, transparent 1px);
+    background-size: calc(100% / 24) 100%; 
+}
+
+.timeline::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background-image: linear-gradient(to right, #ccc 1px, transparent 1px);
+    background-size: calc(100% / 4) 100%; /* 6時間ごと */
+    pointer-events: none;
+}
+
+.bar { 
+    position: absolute; height: 24px; top: 13px; background: #4dabf7; 
+    border-radius: 4px; font-size: 0.75rem; color: white; 
+    display: flex; align-items: center; padding-left: 5px; z-index: 2; 
+}
+.break { 
+    position: absolute; height: 100%; top: 0; background: rgba(255,255,255,0.4); 
+    border-left: 1px dashed #fff; border-right: 1px dashed #fff; 
+}
+.hide-breaks .break { display: none; }
+
+/* ==========================================
+   5. 登録フォーム・テーブル (Forms & Tables)
+   ========================================== */
+.form-section { background: #fff5f5; padding: 15px; border-radius: 10px; border: 1px solid #ffc9c9; margin-bottom: 30px; }
+.form-grid { display: grid; grid-template-columns: 1fr; gap: 15px; align-items: end; }
+@media (min-width: 600px) { .form-grid { grid-template-columns: 1fr 1fr auto; } }
+
+label { display: block; font-weight: bold; font-size: 0.85rem; margin-bottom: 5px; color: #555; }
+input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; }
+
+.btn-add, .btn-submit { 
+    background: #e03131; color: white; border: none; padding: 12px 20px; 
+    border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 1rem;
+}
+
+.table-wrapper { width: 100%; overflow-x: auto; }
+.user-table { width: 100%; border-collapse: collapse; }
+.user-table th, .user-table td { padding: 12px 8px; text-align: left; border-bottom: 1px solid #eee; }
+.btn-delete { color: #e03131; background: none; border: none; cursor: pointer; text-decoration: underline; font-size: 0.85rem; }

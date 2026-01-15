@@ -27,14 +27,12 @@ module.exports = (pool) => {
             const startOfMonth = moment().startOf('month').format('YYYY-MM-DD');
             const endOfMonth = moment().endOf('month').format('YYYY-MM-DD');
 
-            // adminならプルダウン用に全ユーザー取得
             let allUsers = [];
             if (isAdmin) {
                 const [users] = await pool.query('SELECT id, username FROM users ORDER BY username ASC');
                 allUsers = users;
             }
 
-            // シフト一覧取得
             let query = `
                 SELECT s.id, u.username, u.user_role, u.id as user_id,
                        DATE_FORMAT(s.shift_date, '%Y-%m-%d') as shift_date,
@@ -52,9 +50,13 @@ module.exports = (pool) => {
 
             const [shifts] = await pool.query(query, params);
 
+            // 【修正】日またぎ対応の合計時間計算
             const totalHours = shifts.reduce((acc, s) => {
                 const start = moment(s.start_time, 'HH:mm');
-                const end = moment(s.end_time, 'HH:mm');
+                let end = moment(s.end_time, 'HH:mm');
+                if (end.isBefore(start)) {
+                    end.add(1, 'day'); // 終了が開始より前なら翌日とする
+                }
                 return acc + end.diff(start, 'hours', true);
             }, 0);
 
@@ -63,9 +65,9 @@ module.exports = (pool) => {
                 currentHours: totalHours.toFixed(1), 
                 moment, 
                 isAdmin,
-                allUsers, // admin用スタッフリスト
-                userId: req.session.userId,     // 自分のID
-                username: req.session.username, // 自分の名前
+                allUsers, 
+                userId: req.session.userId,     
+                username: req.session.username, 
                 error: req.query.error || null 
             });
         } catch (e) { 
@@ -78,29 +80,10 @@ module.exports = (pool) => {
     router.post('/register', requireLogin, async (req, res) => {
         const { date, start, end, employee_id } = req.body;
         const isAdmin = (req.session.username === 'admin');
-        
-        // adminなら選択されたID、一般なら自分のIDを使用する（この定義が必要）
         const targetUserId = (isAdmin && employee_id) ? employee_id : req.session.userId;
 
-        // 1. 開始と終了が同じならエラー
         if (start === end) {
             return res.redirect('/shifts/register?error=開始と終了を同じにはできません');
-        }
-
-        // 2. 08:30~19:30 のバリデーション（万が一のためにシステム的には保存を許可するが、一応チェックは残す場合）
-        // ※もし完全に自由にしたい場合は、以下のStartTime/EndTimeのチェックブロックを消してください
-        const startTime = moment(start, 'HH:mm');
-        const endTime = moment(end, 'HH:mm');
-        const minTime = moment('08:30', 'HH:mm');
-        const maxTime = moment('19:30', 'HH:mm');
-
-        // 日を跨がない（start < end）かつ、時間外の場合は警告を出す例
-        // 日を跨ぐ（start > end）場合は「万が一」のケースとして通す
-        if (startTime.isBefore(endTime)) {
-             if (startTime.isBefore(minTime) || endTime.isAfter(maxTime)) {
-                 // 厳格に制限したいならここでreturn res.redirect...
-                 console.log("警告: 通常の営業時間外のシフトです");
-             }
         }
 
         try {
@@ -110,12 +93,12 @@ module.exports = (pool) => {
             );
             res.redirect('/shifts/register');
         } catch (e) { 
-            console.error(e);
+            console.error("DB登録エラー:", e);
             res.redirect('/shifts/register?error=登録失敗'); 
         }
     });
 
-    // --- [POST] シフト削除（重要：必ずreturn routerより前に書く） ---
+    // --- [POST] シフト削除 ---
     router.post('/delete/:id', requireLogin, async (req, res) => {
         if (req.session.username !== 'admin') {
             return res.status(403).send('権限がありません');
@@ -146,60 +129,93 @@ module.exports = (pool) => {
                 if (!shiftsByDay[s.shift_date]) shiftsByDay[s.shift_date] = []; 
                 shiftsByDay[s.shift_date].push(s); 
             });
-            res.render('shifts/view', { currentMonth, shiftsByDay, moment, calendarStartDay: currentMonth.clone().startOf('month').startOf('week'), calendarEndDay: currentMonth.clone().endOf('month').endOf('week'), today: moment() });
+            res.render('shifts/view', { 
+                currentMonth, 
+                shiftsByDay, 
+                moment, 
+                calendarStartDay: currentMonth.clone().startOf('month').startOf('week'), 
+                calendarEndDay: currentMonth.clone().endOf('month').endOf('week'), 
+                today: moment() 
+            });
         } catch (e) { res.status(500).send('エラー'); }
     });
 
-    // --- [GET] 1日詳細 ---
-    router.get('/day/:dateString', requireLogin, async (req, res) => {
-        const dateString = req.params.dateString;
+    // --- [GET] 1日詳細 (丸一日チャート & 跨ぎ対応版) ---
+    router.get('/day/:date', requireLogin, async (req, res) => {
+        const dateString = req.params.date;
+        const yesterdayString = moment(dateString).subtract(1, 'day').format('YYYY-MM-DD');
         const isAdmin = (req.session.username === 'admin');
-        try {
-            const [dailyShiftsResult] = await pool.query(`SELECT u.username, TIME_FORMAT(s.start_time, '%H:%i') as start_time, TIME_FORMAT(s.end_time, '%H:%i') as end_time FROM shifts s JOIN users u ON s.user_id = u.id WHERE s.shift_date = ?`, [dateString]);
-            const [allUsersResult] = await pool.query(`SELECT id, username, user_role FROM users ORDER BY FIELD(user_role, '社員', 'パート', 'アルバイト'), id ASC`);
-            const dailyShiftsMap = dailyShiftsResult.reduce((map, s) => { map[s.username] = { start: s.start_time, end: s.end_time }; return map; }, {});
-            res.render('shifts/day_shifts', { targetDate: moment(dateString), allUsers: allUsersResult, dailyShiftsMap, moment, isAdmin, currentUsername: req.session.username });
-        } catch (e) { res.status(500).send('エラー'); }
-    });
 
+        try {
+            // 「当日のシフト」と「前日から跨いでいるシフト」を両方取得
+            const [rows] = await pool.query(
+                `SELECT s.*, u.username, 
+                        TIME_FORMAT(s.start_time, '%H:%i') as start_time, 
+                        TIME_FORMAT(s.end_time, '%H:%i') as end_time
+                 FROM shifts s 
+                 JOIN users u ON s.user_id = u.id 
+                 WHERE s.shift_date = ? 
+                 OR (s.shift_date = ? AND s.end_time < s.start_time)`,
+                [dateString, yesterdayString]
+            );
+
+            // データの加工：前日からの継続かどうかをフラグ化
+            const processedRows = rows.map(shift => {
+                const isFromYesterday = moment(shift.shift_date).format('YYYY-MM-DD') !== dateString;
+                return {
+                    ...shift,
+                    isFromYesterday: isFromYesterday
+                };
+            });
+
+            res.render('shifts/day_shifts', { 
+                shifts: processedRows, 
+                date: dateString,
+                isAdmin: isAdmin,
+                moment: moment 
+            });
+        } catch (e) {
+            console.error(e);
+            res.status(500).send("エラーが発生しました");
+        }
+    });
 
     // --- [GET] 年間全体表 ---
-    // requireLoginを追加してセキュリティを確保
     router.get('/year/:year?', requireLogin, async (req, res) => {
         try {
             const targetYear = parseInt(req.params.year) || new Date().getFullYear();
-            // isAdminの判定を他のルートと統一
             const isAdmin = (req.session.username === 'admin');
             const userId = req.session.userId;
 
+            // 【修正】日またぎシフトの労働時間を正しく計算するSQL
+            // end_time < start_time の場合は24時間を加算して計算
             let query = `
                 SELECT 
                     MONTH(shift_date) as month,
                     COUNT(DISTINCT shift_date) as total_days,
-                    SUM(TIME_TO_SEC(TIMEDIFF(end_time, start_time)) / 3600) as total_hours
+                    SUM(
+                        CASE 
+                            WHEN end_time >= start_time THEN TIME_TO_SEC(TIMEDIFF(end_time, start_time)) / 3600
+                            ELSE (TIME_TO_SEC(TIMEDIFF('24:00:00', start_time)) + TIME_TO_SEC(end_time)) / 3600
+                        END
+                    ) as total_hours
                 FROM shifts
                 WHERE YEAR(shift_date) = ?
             `;
             
             const params = [targetYear];
-
             if (!isAdmin) {
                 query += ` AND user_id = ?`;
                 params.push(userId);
             }
-
             query += ` GROUP BY MONTH(shift_date) ORDER BY month ASC`;
 
             const [stats] = await pool.query(query, params);
 
-            // 1月〜12月の初期化
             const monthlyData = Array.from({ length: 12 }, (_, i) => ({
-                month: i + 1,
-                days: 0,
-                hours: 0
+                month: i + 1, days: 0, hours: 0
             }));
 
-            // 年間合計を算出するための変数
             let yearlyTotalDays = 0;
             let yearlyTotalHours = 0;
 
@@ -208,11 +224,8 @@ module.exports = (pool) => {
                 if (monthlyData[idx]) {
                     const days = s.total_days || 0;
                     const hours = Math.round((s.total_hours || 0) * 10) / 10;
-                    
                     monthlyData[idx].days = days;
                     monthlyData[idx].hours = hours;
-
-                    // 年間合計に加算
                     yearlyTotalDays += days;
                     yearlyTotalHours += hours;
                 }
@@ -221,16 +234,15 @@ module.exports = (pool) => {
             res.render('shifts/year', {
                 targetYear,
                 monthlyData,
-                yearlyTotalDays,               // 追加：年間の総日数
-                yearlyTotalHours: yearlyTotalHours.toFixed(1), // 追加：年間の総時間
+                yearlyTotalDays,
+                yearlyTotalHours: yearlyTotalHours.toFixed(1),
                 isAdmin,
                 username: req.session.username || 'スタッフ'
             });
 
         } catch (err) {
-            console.error("--- SQL実行エラー ---");
-            console.error(err.message);
-            res.status(500).send("エラーが発生しました: " + err.message);
+            console.error(err);
+            res.status(500).send("エラーが発生しました");
         }
     });
 

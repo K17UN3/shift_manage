@@ -2,27 +2,101 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>シフト表</title>
-    <style>
-        body { font-family: sans-serif; background: #fff; margin: 0; padding: 20px; color: #333; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        h1 { font-size: 1.2rem; margin: 0; }
-        .nav-link { font-size: 0.8rem; color: #007bff; text-decoration: none; }
-        .toggle-btn { font-size: 0.7rem; color: #999; cursor: pointer; user-select: none; }
+    <title><%= date %> のシフト表</title>
+    <link rel="stylesheet" href="/css/stylesheet.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <a href="/shifts/view" class="nav-link">← 戻る</a>
+                <h1><%= moment(date).format('M/D (ddd)') %> の詳細</h1>
+            </div>
+            <div id="breakToggle" class="toggle-btn" style="cursor: pointer; font-size: 0.8rem; color: #007bff;">
+                休憩を表示する
+            </div>
+        </div>
 
-        /* --- 時間軸（目盛り）のスタイル --- */
-        .time-axis { display: flex; align-items: flex-end; margin-bottom: 5px; }
-        .time-axis-spacer { width: 120px; }
-        .time-labels { 
-            flex-grow: 1; 
-            display: flex; 
-            justify-content: space-between; 
-            font-size: 0.65rem; 
-            color: #999; 
-            padding-bottom: 2px;
-            position: relative;
+        <div class="time-axis">
+            <div class="time-axis-spacer" style="width: 120px;"></div>
+            <div class="time-labels" style="flex-grow: 1; display: flex; justify-content: space-between; font-size: 0.65rem; color: #999;">
+                <% for(let i=0; i<=24; i+=2) { %>
+                    <div class="time-label" style="position: relative;">
+                        <%= i %>:00
+                    </div>
+                <% } %>
+            </div>
+        </div>
+
+        <div class="chart hide-breaks" id="chart">
+            <% shifts.forEach(shift => { 
+                const [startH, startM] = shift.start_time.split(':').map(Number);
+                const [endH, endM] = shift.end_time.split(':').map(Number);
+
+                let startPercent, endPercent;
+                const totalMinutes = 24 * 60; // 1日の総分数
+
+                if (shift.isFromYesterday) {
+                    // 前日から継続している場合：0%から開始
+                    startPercent = 0;
+                    endPercent = ((endH * 60 + endM) / totalMinutes) * 100;
+                } else {
+                    // 当日開始の場合
+                    startPercent = ((startH * 60 + startM) / totalMinutes) * 100;
+                    
+                    if (shift.end_time < shift.start_time) {
+                        // 翌日に跨ぐ場合：100%まで表示
+                        endPercent = 100;
+                    } else {
+                        endPercent = ((endH * 60 + endM) / totalMinutes) * 100;
+                    }
+                }
+                const width = endPercent - startPercent;
+                const durationHours = (endPercent - startPercent) * 24 / 100;
+            %>
+                <div class="row">
+                    <div class="name-col"><%= shift.username %></div>
+                    <div class="timeline">
+                        <div class="bar" style="left: <%= startPercent %>%; width: <%= width %>%;">
+                            <span style="padding-left: 5px;">
+                                <%= shift.start_time %> 〜 <%= shift.end_time %>
+                            </span>
+                            
+                            <% if (durationHours >= 6) { %>
+                                <div class="break" style="
+                                    position: absolute;
+                                    top: 0;
+                                    left: 40%; /* 仮に開始4時間後付近 */
+                                    width: 10%; /* 約1時間分 */
+                                    height: 100%;
+                                    background: rgba(255,255,255,0.4);
+                                    border-left: 1px dashed #fff;
+                                    border-right: 1px dashed #fff;
+                                "></div>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            <% }) %>
+        </div>
+    </div>
+
+    <script>
+        const btn = document.getElementById('breakToggle');
+        const chart = document.getElementById('chart');
+
+        btn.onclick = () => {
+            const isHidden = chart.classList.toggle('hide-breaks');
+            btn.innerText = isHidden ? '休憩を表示する' : '休憩を隠す';
+        };
+    </script>
+
+    <style>
+        /* 休憩表示の切り替え用CSS */
+        .hide-breaks .break {
+            display: none;
         }
-        .time-label { position: relative; flex: 1; text-align: left; }
+        /* 目盛りの補助線 */
         .time-label::after {
             content: "";
             position: absolute;
@@ -32,91 +106,6 @@
             height: 5px;
             background: #bbb;
         }
-
-        .chart { border-top: 1px solid #eee; }
-        .row { 
-            display: flex; 
-            border-bottom: 1px solid #ddd; 
-            height: 45px; 
-            align-items: center; 
-        }
-        /* 名前の列：色指定を削除し、太字のみに */
-        .name-col { width: 120px; font-size: 0.85rem; font-weight: bold; color: #333; }
-
-        /* タイムラインのグリッド線設定 */
-        .timeline { 
-            flex-grow: 1; 
-            position: relative; 
-            height: 100%; 
-            background-image: linear-gradient(to right, #e0e0e0 1px, transparent 1px);
-            background-size: calc(100% / 13) 100%; 
-        }
-
-        /* 3時間ごとの補助線 */
-        .timeline::before {
-            content: "";
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-image: linear-gradient(to right, #ccc 1px, transparent 1px);
-            background-size: calc(300% / 13) 100%;
-            pointer-events: none;
-        }
-
-        .bar { position: absolute; height: 20px; top: 12px; background: #4dabf7; border-radius: 2px; font-size: 0.7rem; color: white; display: flex; align-items: center; padding-left: 5px; z-index: 2; }
-        .break { position: absolute; height: 100%; top: 0; background: rgba(255,255,255,0.4); border-left: 1px dashed #fff; border-right: 1px dashed #fff; }
-        .hide-breaks .break { display: none; }
     </style>
-</head>
-<body>
-    <div class="header">
-        <div>
-            <a href="/shifts/view" class="nav-link">← 戻る</a>
-            <h1><%= targetDate.format('M/D (ddd)') %></h1>
-        </div>
-        <div id="breakToggle" class="toggle-btn">休憩を非表示中 (クリックで表示)</div>
-    </div>
-
-    <div class="time-axis">
-        <div class="time-axis-spacer"></div>
-        <div class="time-labels">
-            <% for(let h=7; h<=20; h++) { %>
-                <div class="time-label"><%= h < 10 ? '0'+h : h %>:00</div>
-            <% } %>
-        </div>
-    </div>
-
-    <div class="chart hide-breaks" id="chart">
-        <% allUsers.forEach(u => { %>
-            <% if (u.username !== 'admin') { %> 
-                <div class="row">
-                    <div class="name-col"><%= u.username %></div>
-                    <div class="timeline">
-                        <% const s = dailyShiftsMap[u.username]; if (s) {
-                            const start = moment(s.start, 'HH:mm').hours() + moment(s.start, 'HH:mm').minutes()/60;
-                            const end = moment(s.end, 'HH:mm').hours() + moment(s.end, 'HH:mm').minutes()/60;
-                            const dur = end - start;
-                        %>
-                            <div class="bar" style="left:<%= ((start-7)/13)*100 %>%; width:<%= (dur/13)*100 %>%;">
-                                <%= s.start %>
-                                <% if (dur >= 6) { %>
-                                    <div class="break" style="left:<%= (4/dur)*100 %>%; width:<%= (1/dur)*100 %>%;"></div>
-                                <% } %>
-                            </div>
-                        <% } %>
-                    </div>
-                </div>
-            <% } %> 
-        <% }); %>
-    </div>
-
-    <script>
-        const btn = document.getElementById('breakToggle');
-        const chart = document.getElementById('chart');
-
-        btn.onclick = () => {
-            const isHidden = chart.classList.toggle('hide-breaks');
-            btn.innerText = isHidden ? '休憩を非表示中 (クリックで表示)' : '休憩を表示中 (クリックで非表示)';
-        };
-    </script>
 </body>
 </html>
