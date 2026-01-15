@@ -4,7 +4,7 @@
   "description": "A simple shift management app with Node.js and Docker.",
   "main": "app.js",
   "scripts": {
-    "start": "node app.js",
+    "start": "node migrate.js && node app.js",
     "dev": "nodemon app.js"
   },
   "dependencies": {
