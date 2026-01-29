@@ -387,3 +387,53 @@ input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radiu
     }
 
 }
+
+/* =========================
+   スマホ：1日詳細（タイムライン）最適化
+   ========================= */
+@media (max-width: 768px) {
+
+    /* 時間軸ラベルは非表示（バー重視） */
+    .time-axis {
+        display: none;
+    }
+
+    /* 名前列をさらに細く */
+    .name-col {
+        width: 60px;
+        font-size: 0.65rem;
+    }
+
+    /* 行の高さを少し広げる */
+    .row {
+        height: 52px;
+        border-bottom: 1px solid #f0f0f0; /* ← 薄く */
+    }
+
+    /* タイムライン背景の縦線を減らす */
+    .timeline {
+        background-image: none;        /* 1時間ごとの線を消す */
+        border-left: none;              /* 0時線を消す */
+    }
+
+    .timeline::before {
+        display: none;                  /* 2時間ごとの補助線も消す */
+    }
+
+    /* バーを太く・押しやすく */
+    .bar {
+        height: 26px;
+        top: 13px;
+        font-size: 0.7rem;
+        white-space: nowrap;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.15); /* 影で区切る */
+    }
+
+    /* 時間テキストを読みやすく */
+    .bar span {
+        font-size: 0.75rem;
+        font-weight: bold;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
