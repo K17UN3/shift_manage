@@ -328,3 +328,62 @@ input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radiu
         padding: 18px 12px;
     }
 }
+
+/* =========================
+   スマホ用：月カレンダーを縦レイアウトに
+   ========================= */
+@media (max-width: 768px) {
+
+    /* 曜日ヘッダーを非表示 */
+    .day-header {
+        display: none;
+    }
+
+    /* 7列 → 1列 */
+    .calendar-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        background: none;
+    }
+
+    /* 日付セルをカード風に */
+    .day-cell {
+        min-height: auto;
+        padding: 12px;
+        border-radius: 12px;
+    }
+
+    /* 日付を左上に */
+    .date-num {
+        align-self: flex-start;
+        font-size: 0.8rem;
+        margin-bottom: 6px;
+    }
+
+    /* シフト情報を見やすく */
+    .shift-info {
+        margin-top: 6px;
+        gap: 6px;
+    }
+
+    .shift-count {
+        font-size: 0.75rem;
+    }
+
+    .shift-tag {
+        font-size: 0.75rem;
+        padding: 4px 6px;
+    }
+}
+
+/* =========================
+   スマホでは月初（1日）から表示
+   ========================= */
+@media (max-width: 768px) {
+
+    /* 前月・次月の日付を非表示 */
+    .day-cell.outside {
+        display: none;
+    }
+
+}
