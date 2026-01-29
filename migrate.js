@@ -11,10 +11,10 @@ async function migrate() {
     for (let i = 1; i <= maxAttempts; i++) {
         try {
             connection = await mysql.createConnection({
-                host: process.env.DB_HOST || 'localhost',
-                user: process.env.DB_USER || 'root',
-                password: process.env.DB_PASSWORD || 'password',
-                database: process.env.DB_NAME || 'shift_db',
+                host: process.env.DATABASE_HOST,
+                user: process.env.DATABASE_USER,
+                password: process.env.DATABASE_PASSWORD,
+                database: process.env.DATABASE_NAME,
                 charset: 'utf8mb4',
                 multipleStatements: true
             });
