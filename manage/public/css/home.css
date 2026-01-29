@@ -1,0 +1,77 @@
+/* =========================
+   Home page
+   ========================= */
+
+/* body 自身に対して指定する */
+body.page-home {
+    font-family: sans-serif;
+    background: #f8f9fa;
+    margin: 0;
+    padding: 20px 10px;
+    color: #333;
+    box-sizing: border-box;
+}
+
+body.page-home .container {
+    width: 95%;
+    max-width: 400px;
+    margin: 0 auto;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+body.page-home .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+body.page-home h1 {
+    font-size: 1.1rem;
+}
+
+body.page-home .btn-logout {
+    font-size: 0.8rem;
+    color: #999;
+    text-decoration: none;
+}
+
+body.page-home .today-info {
+    font-size: 0.95rem;
+    color: #666;
+    margin-bottom: 25px;
+}
+
+body.page-home .menu-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+body.page-home .menu-item {
+    background: white;
+    padding: 22px 15px;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    transition: background 0.2s, transform 0.1s;
+}
+
+body.page-home .menu-item:active {
+    background: #f1f3f5;
+    transform: scale(0.98);
+}
+
+body.page-home .admin-item {
+    background: #fff5f5;
+    border-color: #ffc9c9;
+    color: #e03131;
+}

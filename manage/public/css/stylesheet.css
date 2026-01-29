@@ -255,3 +255,76 @@ input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radiu
 .user-table { width: 100%; border-collapse: collapse; }
 .user-table th, .user-table td { padding: 12px 8px; text-align: left; border-bottom: 1px solid #eee; }
 .btn-delete { color: #e03131; background: none; border: none; cursor: pointer; text-decoration: underline; font-size: 0.85rem; }
+
+
+/* ==========================================
+   6. スマホ最適化 (Mobile Responsive)
+   ========================================== */
+@media (max-width: 768px) {
+
+    body {
+        padding: 10px;
+    }
+
+    .container {
+        padding: 15px;
+        border-radius: 8px;
+    }
+
+    h1 {
+        font-size: 1.2rem;
+        padding-left: 10px;
+    }
+
+    /* ヘッダーを縦並びに */
+    .header,
+    .header-area,
+    .header-top {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    /* カレンダー：7列は維持しつつ高さを抑える */
+    .calendar-grid {
+        gap: 4px;
+    }
+
+    .day-cell {
+        min-height: 80px;
+        padding: 6px;
+    }
+
+    .date-num {
+        font-size: 0.65rem;
+        padding: 2px 6px;
+    }
+
+    .shift-tag {
+        font-size: 0.6rem;
+        padding: 2px 4px;
+    }
+
+    /* タイムライン（ここが一番重要） */
+    .time-axis-spacer,
+    .name-col {
+        width: 80px;
+        font-size: 0.7rem;
+    }
+
+    .row {
+        height: 44px;
+    }
+
+    .bar {
+        font-size: 0.65rem;
+        height: 20px;
+        top: 12px;
+    }
+
+    /* メニューを押しやすく */
+    .menu-item {
+        font-size: 0.95rem;
+        padding: 18px 12px;
+    }
+}
